@@ -77,22 +77,49 @@
             <button class="tab" data-mode="reply" type="button">Reply</button>
           </div>
           <div class="chat-controls">
-            <label class="select compact">
-              <span>Format</span>
-              <select id="format">
-                <option value="slack">Slack</option>
-                <option value="email">Email</option>
-                <option value="linkedin">LinkedIn</option>
-              </select>
-            </label>
-            <label class="select compact">
-              <span>Tone</span>
-              <select id="tone">
-                <option value="gentle">Gentle</option>
-                <option value="balanced" selected>Balanced</option>
-                <option value="spicy">Spicy</option>
-              </select>
-            </label>
+            <div class="dp-wrap" id="dp-format" data-field="format">
+              <button class="dp-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <svg class="dp-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zM4 10h10v4H4zM4 16h16v4H4z"/></svg>
+                <span class="dp-label">Slack</span>
+                <svg class="dp-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="dp-menu" role="listbox" data-side="below" data-align="right">
+                <button class="dp-option" role="option" data-value="slack" type="button">
+                  <div class="dp-option-row"><span class="dp-opt-emoji">💬</span><span class="dp-opt-title">Slack</span></div>
+                  <span class="dp-opt-desc">Short, direct, no subject line</span>
+                </button>
+                <button class="dp-option" role="option" data-value="email" type="button">
+                  <div class="dp-option-row"><span class="dp-opt-emoji">✉️</span><span class="dp-opt-title">Email</span></div>
+                  <span class="dp-opt-desc">Subject, greeting, sign-off</span>
+                </button>
+                <button class="dp-option" role="option" data-value="linkedin" type="button">
+                  <div class="dp-option-row"><span class="dp-opt-emoji">💼</span><span class="dp-opt-title">LinkedIn</span></div>
+                  <span class="dp-opt-desc">Professional, slightly warm</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="dp-wrap" id="dp-tone" data-field="tone">
+              <button class="dp-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <svg class="dp-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+                <span class="dp-label">Balanced</span>
+                <svg class="dp-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="dp-menu" role="listbox" data-side="below" data-align="right">
+                <button class="dp-option" role="option" data-value="gentle" type="button">
+                  <div class="dp-option-row"><span class="dp-opt-emoji">🌸</span><span class="dp-opt-title">Gentle</span></div>
+                  <span class="dp-opt-desc">Soft and empathetic, avoids anything blunt</span>
+                </button>
+                <button class="dp-option" role="option" data-value="balanced" type="button">
+                  <div class="dp-option-row"><span class="dp-opt-emoji">⚖️</span><span class="dp-opt-title">Balanced</span></div>
+                  <span class="dp-opt-desc">Professional and natural, the sweet spot</span>
+                </button>
+                <button class="dp-option" role="option" data-value="spicy" type="button">
+                  <div class="dp-option-row"><span class="dp-opt-emoji">🌶️</span><span class="dp-opt-title">Spicy</span></div>
+                  <span class="dp-opt-desc">Bold and direct, doesn't sugarcoat</span>
+                </button>
+              </div>
+            </div>
             <button class="btn-ghost sm" id="delete-chat" type="button" title="Delete this chat" hidden>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
             </button>

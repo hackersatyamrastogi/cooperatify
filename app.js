@@ -111,15 +111,15 @@ function renderChat() {
     empty.hidden = false;
     del.hidden = true;
     setMode('translate');
-    $('#format').value = 'slack';
-    $('#tone').value = 'balanced';
+    formatDD.setValue('slack');
+    toneDD.setValue('balanced');
     return;
   }
 
   del.hidden = false;
   setMode(c.mode);
-  $('#format').value = c.format;
-  $('#tone').value = c.tone;
+  formatDD.setValue(c.format);
+  toneDD.setValue(c.tone);
 
   if (!c.messages.length) {
     msgs.innerHTML = '';
@@ -190,8 +190,50 @@ $$('.tab').forEach((t) =>
     renderSidebar();
   })
 );
-$('#format').addEventListener('change', (e) => { const c = active() || ensureConv(); c.format = e.target.value; c.updated = now(); save(); renderSidebar(); });
-$('#tone').addEventListener('change', (e) => { const c = active() || ensureConv(); c.tone = e.target.value; c.updated = now(); save(); renderSidebar(); });
+function setupDropdown(wrapId, onChange) {
+  const wrap = document.getElementById(wrapId);
+  const trigger = wrap.querySelector('.dp-trigger');
+  const label = wrap.querySelector('.dp-label');
+  const options = [...wrap.querySelectorAll('.dp-option')];
+
+  const close = () => { wrap.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); };
+  const open = () => {
+    document.querySelectorAll('.dp-wrap.open').forEach((w) => w !== wrap && w.classList.remove('open'));
+    wrap.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
+  };
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    wrap.classList.contains('open') ? close() : open();
+  });
+  options.forEach((o) =>
+    o.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const v = o.dataset.value;
+      setValue(v);
+      onChange(v);
+      close();
+    })
+  );
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+  function setValue(v) {
+    const opt = options.find((o) => o.dataset.value === v) || options[0];
+    label.textContent = opt.querySelector('.dp-opt-title').textContent;
+    options.forEach((o) => o.classList.toggle('active', o === opt));
+    wrap.dataset.value = v;
+  }
+  return { setValue, get value() { return wrap.dataset.value; } };
+}
+
+const formatDD = setupDropdown('dp-format', (v) => {
+  const c = active() || ensureConv(); c.format = v; c.updated = now(); save(); renderSidebar();
+});
+const toneDD = setupDropdown('dp-tone', (v) => {
+  const c = active() || ensureConv(); c.tone = v; c.updated = now(); save(); renderSidebar();
+});
 
 document.addEventListener('click', (e) => {
   if (e.target.matches('.chip')) {
