@@ -304,6 +304,39 @@ async function stream(c, pending, screenshot) {
   c.updated = now(); save(); renderChat(); renderSidebar();
 }
 
+// --- Auth ---
+async function renderAuth() {
+  try {
+    const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    const { user } = await r.json();
+    const slot = $('#auth-slot');
+    if (!user) return; // keep Sign in button
+    slot.innerHTML = `
+      <button class="user-chip" id="user-chip" type="button" aria-expanded="false">
+        <img src="${user.avatar || ''}" alt="" />
+        <span>${user.name || user.login}</span>
+      </button>
+      <div class="user-menu" id="user-menu" hidden>
+        <div class="um-head">
+          <div class="um-name">${user.name || user.login}</div>
+          <div class="um-sub">${user.email || '@' + user.login}</div>
+        </div>
+        <a href="https://github.com/${user.login}" target="_blank" rel="noreferrer">View GitHub profile</a>
+        <button id="signout-btn" type="button">Sign out</button>
+      </div>`;
+    $('#user-chip').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = $('#user-menu'); m.hidden = !m.hidden;
+    });
+    document.addEventListener('click', () => { const m = $('#user-menu'); if (m && !m.hidden) m.hidden = true; });
+    $('#signout-btn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      location.reload();
+    });
+  } catch {}
+}
+renderAuth();
+
 // Theme toggle
 const themeBtn = $('#theme-toggle');
 const SUN = '<path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="5"/>';

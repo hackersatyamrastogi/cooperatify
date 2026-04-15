@@ -68,6 +68,19 @@ body {
 .theme-toggle { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--dim); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .theme-toggle:hover { border-color: var(--yellow); color: var(--yellow); }
 
+/* Auth */
+.auth-slot { position: relative; display: inline-flex; }
+.user-chip { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px 3px 3px; cursor: pointer; color: var(--text); font-family: var(--grotesk); font-size: 12.5px; font-weight: 600; }
+.user-chip:hover { border-color: var(--yellow); }
+.user-chip img { width: 24px; height: 24px; border-radius: 50%; display: block; }
+.user-menu { position: absolute; right: 0; top: calc(100% + 6px); background: var(--card); border: 1px solid var(--border); border-radius: 10px; min-width: 200px; padding: 6px; z-index: 60; box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
+.user-menu[hidden] { display: none; }
+.user-menu .um-head { padding: 8px 10px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.user-menu .um-name { font-family: var(--grotesk); font-weight: 700; font-size: 13px; color: var(--text); }
+.user-menu .um-sub { font-family: var(--mono); font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 1.3px; margin-top: 2px; }
+.user-menu button, .user-menu a { display: block; width: 100%; background: transparent; border: 0; text-align: left; padding: 8px 10px; border-radius: 7px; font: inherit; font-family: var(--grotesk); font-size: 13px; color: var(--text); cursor: pointer; text-decoration: none; }
+.user-menu button:hover, .user-menu a:hover { background: var(--surface); color: var(--yellow); }
+
 /* Tip banner */
 .tip { border-bottom: 1px solid var(--border); background: var(--bg-subtle); color: var(--dim); font-size: 12px; font-family: var(--mono); }
 .tip .wrap { display: flex; gap: 8px; align-items: center; padding: 8px 24px; }

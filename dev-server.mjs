@@ -56,7 +56,7 @@ async function callApi(name, req, res, body) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
-  const apiMatch = url.pathname.match(/^\/api\/([A-Za-z0-9_-]+)$/);
+  const apiMatch = url.pathname.match(/^\/api\/([A-Za-z0-9_\-/]+)$/);
   if (apiMatch) {
     const chunks = [];
     for await (const c of req) chunks.push(c);
