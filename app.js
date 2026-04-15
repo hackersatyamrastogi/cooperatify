@@ -1,55 +1,209 @@
-const $ = (s) => document.querySelector(s);
+// Cooperatify chat — multi-turn with local-only conversations.
 
-const state = {
-  mode: 'translate', // 'translate' | 'reply'
-  format: 'slack',
-  tone: 'balanced',
-  screenshot: null, // data URL for reply mode
-};
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const STORE_KEY = 'cooperatify:conversations:v1';
+const ACTIVE_KEY = 'cooperatify:activeId';
 
 const TONE_HINTS = {
-  gentle:   { name: 'Gentle',   desc: 'Soft and empathetic, avoids anything blunt.' },
-  balanced: { name: 'Balanced', desc: 'Professional and natural, the sweet spot.' },
-  spicy:    { name: 'Spicy',    desc: "Bold and direct — doesn't sugarcoat." },
+  gentle: 'Soft and empathetic, avoids anything blunt.',
+  balanced: 'Professional and natural, the sweet spot.',
+  spicy: "Bold and direct — doesn't sugarcoat.",
 };
 
-// --- Tabs
-document.querySelectorAll('.tab').forEach((el) => {
-  el.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
-    el.classList.add('active');
-    state.mode = el.dataset.mode;
-    $('#go-label').textContent = state.mode === 'translate' ? 'Translate' : 'Reply';
-    $('#input').placeholder =
-      state.mode === 'translate' ? 'What you really want to say...' : 'Paste text or drop a screenshot...';
-    $('#drop-label').hidden = state.mode !== 'reply';
-  });
-});
+let convs = load();
+let activeId = localStorage.getItem(ACTIVE_KEY) || null;
+let pendingScreenshot = null; // {dataUrl}
 
-// --- Controls
-$('#format').addEventListener('change', (e) => (state.format = e.target.value));
-$('#tone').addEventListener('change', (e) => {
-  state.tone = e.target.value;
-  const t = TONE_HINTS[state.tone];
-  $('#tone-hint').innerHTML = `<strong>${t.name}</strong> — ${t.desc}`;
-});
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function now() { return Date.now(); }
+function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(convs)); }
+function active() { return convs.find((c) => c.id === activeId) || null; }
 
-// --- Chips
-document.querySelectorAll('.chip').forEach((c) =>
-  c.addEventListener('click', () => { $('#input').value = c.textContent.trim(); $('#input').focus(); })
+function newConv() {
+  const c = {
+    id: uid(),
+    title: 'New chat',
+    mode: 'translate',
+    format: 'slack',
+    tone: 'balanced',
+    messages: [],
+    created: now(),
+    updated: now(),
+  };
+  convs.unshift(c);
+  activeId = c.id;
+  localStorage.setItem(ACTIVE_KEY, activeId);
+  save();
+  renderSidebar();
+  renderChat();
+  $('#input').focus();
+}
+
+function deleteConv(id) {
+  convs = convs.filter((c) => c.id !== id);
+  if (activeId === id) activeId = convs[0]?.id || null;
+  if (activeId) localStorage.setItem(ACTIVE_KEY, activeId); else localStorage.removeItem(ACTIVE_KEY);
+  save();
+  renderSidebar();
+  renderChat();
+}
+
+function selectConv(id) {
+  activeId = id;
+  localStorage.setItem(ACTIVE_KEY, activeId);
+  renderSidebar();
+  renderChat();
+}
+
+function fmtRel(ts) {
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s/60)}m`;
+  if (s < 86400) return `${Math.floor(s/3600)}h`;
+  return `${Math.floor(s/86400)}d`;
+}
+
+function renderSidebar() {
+  const list = $('#conv-list');
+  const q = ($('#search').value || '').toLowerCase().trim();
+  const shown = convs.filter((c) =>
+    !q || c.title.toLowerCase().includes(q) || c.messages.some((m) => m.content.toLowerCase().includes(q))
+  );
+  if (!shown.length) {
+    list.innerHTML = `<li class="conv-empty">${q ? 'No matches' : 'No conversations yet'}</li>`;
+    return;
+  }
+  list.innerHTML = shown.map((c) => `
+    <li class="${c.id === activeId ? 'active' : ''}" data-id="${c.id}">
+      <span class="conv-title">${escapeHtml(c.title)}</span>
+      <span class="conv-meta">${c.mode} · ${c.format} · ${c.tone} · ${fmtRel(c.updated)}</span>
+    </li>`).join('');
+  list.querySelectorAll('li[data-id]').forEach((el) =>
+    el.addEventListener('click', () => selectConv(el.dataset.id))
+  );
+}
+
+function renderChat() {
+  const c = active();
+  const empty = $('#empty');
+  const msgs = $('#messages');
+  const del = $('#delete-chat');
+
+  if (!c) {
+    // No active conversation — show empty state, hide delete.
+    msgs.innerHTML = '';
+    msgs.appendChild(empty);
+    empty.hidden = false;
+    del.hidden = true;
+    setMode('translate');
+    $('#format').value = 'slack';
+    $('#tone').value = 'balanced';
+    return;
+  }
+
+  del.hidden = false;
+  setMode(c.mode);
+  $('#format').value = c.format;
+  $('#tone').value = c.tone;
+
+  if (!c.messages.length) {
+    msgs.innerHTML = '';
+    msgs.appendChild(empty);
+    empty.hidden = false;
+    return;
+  }
+
+  empty.hidden = true;
+  msgs.innerHTML = '';
+  for (const m of c.messages) msgs.appendChild(bubble(m));
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function bubble(m) {
+  const el = document.createElement('div');
+  el.className = `bubble ${m.role}`;
+  if (m.thinking) el.classList.add('thinking');
+  const label = m.role === 'user' ? 'You' : 'Cooperatify';
+  const shot = m.screenshot ? `<img class="shot" src="${m.screenshot}" alt="attachment" />` : '';
+  const body = m.thinking ? 'Thinking…' : escapeHtml(m.content);
+  const actions = m.role === 'assistant' && !m.thinking
+    ? `<div class="bubble-actions">
+         <button data-a="copy">Copy</button>
+         <button data-a="regen">Regenerate</button>
+       </div>` : '';
+  el.innerHTML = `<span class="role">${label}</span>${shot}<div class="body">${body}</div>${actions}`;
+  if (m.role === 'assistant' && !m.thinking) {
+    el.querySelector('[data-a="copy"]').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(m.content); flash(el, 'Copied ✓'); } catch {}
+    });
+    el.querySelector('[data-a="regen"]').addEventListener('click', () => regenerate(m));
+  }
+  return el;
+}
+
+function flash(el, text) {
+  const prev = el.querySelector('[data-a="copy"]').textContent;
+  el.querySelector('[data-a="copy"]').textContent = text;
+  setTimeout(() => (el.querySelector('[data-a="copy"]').textContent = prev), 1100);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function setMode(mode) {
+  $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === mode));
+  $('#input').placeholder = mode === 'translate' ? 'What you really want to say...' : 'Paste a message or drop a screenshot...';
+  $('#drop-label').hidden = mode !== 'reply';
+  $('#send-label').textContent = 'Send';
+}
+
+// --- Event wiring ---
+$('#new-chat').addEventListener('click', newConv);
+$('#delete-chat').addEventListener('click', () => {
+  if (activeId && confirm('Delete this conversation?')) deleteConv(activeId);
+});
+$('#search').addEventListener('input', renderSidebar);
+
+$$('.tab').forEach((t) =>
+  t.addEventListener('click', () => {
+    const c = active() || ensureConv();
+    c.mode = t.dataset.mode;
+    c.updated = now();
+    save();
+    setMode(c.mode);
+    renderSidebar();
+  })
 );
+$('#format').addEventListener('change', (e) => { const c = active() || ensureConv(); c.format = e.target.value; c.updated = now(); save(); renderSidebar(); });
+$('#tone').addEventListener('change', (e) => { const c = active() || ensureConv(); c.tone = e.target.value; c.updated = now(); save(); renderSidebar(); });
 
-// --- Screenshot drop / paste (reply mode)
+document.addEventListener('click', (e) => {
+  if (e.target.matches('.chip')) {
+    $('#input').value = e.target.textContent.trim();
+    autoGrow($('#input'));
+    $('#input').focus();
+  }
+});
+
+const input = $('#input');
+input.addEventListener('input', () => autoGrow(input));
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 220) + 'px'; }
+
+$('#send').addEventListener('click', send);
+
+// Screenshot drop/paste
 const drop = $('#drop');
-['dragenter', 'dragover'].forEach((ev) =>
-  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); })
-);
-['dragleave', 'drop'].forEach((ev) =>
-  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('drag'); })
-);
+['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('drag'); }));
 drop.addEventListener('drop', (e) => {
-  const file = e.dataTransfer.files?.[0];
-  if (file && file.type.startsWith('image/')) readImage(file);
+  const f = e.dataTransfer.files?.[0];
+  if (f && f.type.startsWith('image/')) readImage(f);
 });
 document.addEventListener('paste', (e) => {
   const item = [...(e.clipboardData?.items || [])].find((i) => i.type.startsWith('image/'));
@@ -58,13 +212,20 @@ document.addEventListener('paste', (e) => {
 function readImage(file) {
   const r = new FileReader();
   r.onload = () => {
-    state.screenshot = r.result;
-    $('#input').value = (($('#input').value || '') + '\n[screenshot attached]').trim();
+    pendingScreenshot = r.result;
+    $('#thumb-img').src = r.result;
+    $('#thumb').hidden = false;
+    if (active()?.mode !== 'reply') {
+      const c = active() || ensureConv();
+      c.mode = 'reply';
+      save(); setMode('reply'); renderSidebar();
+    }
   };
   r.readAsDataURL(file);
 }
+$('#thumb-x').addEventListener('click', () => { pendingScreenshot = null; $('#thumb').hidden = true; });
 
-// --- Voice input (Web Speech API, progressive enhancement)
+// Voice input
 const mic = $('#mic');
 let rec = null;
 mic.addEventListener('click', () => {
@@ -75,53 +236,75 @@ mic.addEventListener('click', () => {
   rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = true;
   rec.onresult = (e) => {
     const text = [...e.results].map((r) => r[0].transcript).join(' ');
-    $('#input').value = text;
+    input.value = text; autoGrow(input);
   };
   rec.onend = () => { rec = null; mic.classList.remove('rec'); };
   rec.start(); mic.classList.add('rec');
 });
 
-// --- Translate / Reply
-$('#go').addEventListener('click', run);
-async function run() {
-  const input = $('#input').value.trim();
-  if (!input && !state.screenshot) return;
-  const btn = $('#go'); btn.disabled = true; btn.querySelector('#go-label').textContent = '…';
-  $('#output').hidden = false;
-  $('#output-body').textContent = 'Thinking…';
+function ensureConv() {
+  if (active()) return active();
+  newConv();
+  return active();
+}
+
+async function send() {
+  const text = input.value.trim();
+  if (!text && !pendingScreenshot) return;
+
+  const c = ensureConv();
+  const userMsg = { role: 'user', content: text || '(see attached screenshot)', ts: now() };
+  if (pendingScreenshot) userMsg.screenshot = pendingScreenshot;
+  c.messages.push(userMsg);
+
+  if (c.messages.length === 1) c.title = text.slice(0, 48) || 'Screenshot chat';
+
+  // Placeholder assistant bubble
+  const pending = { role: 'assistant', content: '', ts: now(), thinking: true };
+  c.messages.push(pending);
+
+  const screenshotToSend = pendingScreenshot;
+  input.value = ''; autoGrow(input); pendingScreenshot = null; $('#thumb').hidden = true;
+  c.updated = now(); save(); renderChat(); renderSidebar();
+
+  await stream(c, pending, screenshotToSend);
+}
+
+async function regenerate(assistantMsg) {
+  const c = active(); if (!c) return;
+  const idx = c.messages.indexOf(assistantMsg);
+  if (idx < 0) return;
+  c.messages.splice(idx); // drop this assistant and any trailing
+  const pending = { role: 'assistant', content: '', ts: now(), thinking: true };
+  c.messages.push(pending);
+  c.updated = now(); save(); renderChat(); renderSidebar();
+  await stream(c, pending, null);
+}
+
+async function stream(c, pending, screenshot) {
+  const payload = {
+    mode: c.mode, format: c.format, tone: c.tone,
+    messages: c.messages.filter((m) => m !== pending).map((m) => ({ role: m.role, content: m.content })),
+    screenshot,
+  };
   try {
-    const res = await fetch('/api/translate', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        mode: state.mode, format: state.format, tone: state.tone,
-        input, screenshot: state.mode === 'reply' ? state.screenshot : null,
-      }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Request failed');
-    $('#output-body').textContent = data.output || '(empty)';
-    saveHistory(input, data.output);
+    pending.content = data.output || '(empty)';
+    pending.thinking = false;
   } catch (err) {
-    $('#output-body').textContent = `Error: ${err.message}\n\nDeploy the /api/translate function (Cloudflare Pages) and set ANTHROPIC_API_KEY.`;
-  } finally {
-    btn.disabled = false; btn.querySelector('#go-label').textContent = state.mode === 'translate' ? 'Translate' : 'Reply';
+    pending.content = `⚠️ ${err.message}`;
+    pending.thinking = false;
   }
+  c.updated = now(); save(); renderChat(); renderSidebar();
 }
 
-$('#copy').addEventListener('click', async () => {
-  const t = $('#output-body').textContent;
-  try { await navigator.clipboard.writeText(t); $('#copy').textContent = 'Copied'; setTimeout(() => ($('#copy').textContent = 'Copy'), 1200); } catch {}
-});
-
-// --- Local history
-function saveHistory(input, output) {
-  try {
-    const key = 'cooperatify:history';
-    const arr = JSON.parse(localStorage.getItem(key) || '[]');
-    arr.unshift({ t: Date.now(), input, output, mode: state.mode, format: state.format, tone: state.tone });
-    localStorage.setItem(key, JSON.stringify(arr.slice(0, 100)));
-  } catch {}
-}
-
+// --- Init ---
+renderSidebar();
+renderChat();
 $('#yr').textContent = new Date().getFullYear();

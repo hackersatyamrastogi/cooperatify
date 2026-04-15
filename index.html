@@ -36,42 +36,35 @@
   </section>
 
   <main>
-    <section class="hero">
-      <div class="wrap hero-grid">
-        <div class="hero-copy">
-          <h1>
-            Type the <span class="grad">real</span> thing.<br />
-            Send the <span class="grad">right</span> thing.
-          </h1>
-          <p class="lede">
-            An AI-powered corporate language translator that turns your unfiltered thoughts — in English,
-            Hindi, Hinglish, Spanish, Portuguese, French, or Mandarin — into polished professional
-            communication for Slack, Email, or LinkedIn.
-          </p>
-          <div class="rotator" aria-hidden="true">
-            <div class="rotator-track">
-              <span>Per my last email</span><span>Just to circle back</span><span>As discussed</span>
-              <span>Let's take this offline</span><span>Looping you in</span><span>Gentle reminder</span>
-              <span>Hope this finds you well</span><span>As per my previous message</span>
-              <span>Let me know your thoughts</span><span>Happy to align</span>
-              <span>Thanks for your patience</span><span>Moving forward</span>
-              <span>Per my last email</span><span>Just to circle back</span><span>As discussed</span>
-              <span>Let's take this offline</span><span>Looping you in</span><span>Gentle reminder</span>
-            </div>
-          </div>
+    <section class="app-shell" id="app">
+      <aside class="sidebar">
+        <div class="sb-head">
+          <button class="btn-primary full" id="new-chat" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            New Chat
+          </button>
         </div>
+        <div class="sb-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" id="search" placeholder="Search conversations..." />
+        </div>
+        <div class="sb-section">Conversations</div>
+        <ul class="conv-list" id="conv-list">
+          <li class="conv-empty">No conversations yet</li>
+        </ul>
+        <div class="sb-foot">
+          <span class="hint">Type the real thing.<br />Send the right thing.</span>
+        </div>
+      </aside>
 
-        <aside class="app" id="app">
-          <div class="app-tabs">
+      <section class="chat" id="chat">
+        <header class="chat-head">
+          <div class="mode-tabs">
             <button class="tab active" data-mode="translate" type="button">Translate</button>
             <button class="tab" data-mode="reply" type="button">Reply</button>
-            <div class="app-history" title="History">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
-            </div>
           </div>
-
-          <div class="app-controls">
-            <label class="select">
+          <div class="chat-controls">
+            <label class="select compact">
               <span>Format</span>
               <select id="format">
                 <option value="slack">Slack</option>
@@ -79,7 +72,7 @@
                 <option value="linkedin">LinkedIn</option>
               </select>
             </label>
-            <label class="select">
+            <label class="select compact">
               <span>Tone</span>
               <select id="tone">
                 <option value="gentle">Gentle</option>
@@ -87,45 +80,47 @@
                 <option value="spicy">Spicy</option>
               </select>
             </label>
+            <button class="btn-ghost sm" id="delete-chat" type="button" title="Delete this chat" hidden>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+            </button>
           </div>
+        </header>
 
-          <div class="tone-hint" id="tone-hint">
-            <strong>Balanced</strong> — Professional and natural, the sweet spot.
+        <div class="messages" id="messages">
+          <div class="empty-state" id="empty">
+            <div class="empty-brand"><span class="brand-dot"></span></div>
+            <h1>Type the <span class="grad">real</span> thing.<br />Send the <span class="grad">right</span> thing.</h1>
+            <p>Drop your unfiltered thoughts below — in any language. I'll rewrite them for Slack, Email, or LinkedIn.</p>
+            <div class="chips" id="chips">
+              <button class="chip" type="button">Bhai kitni baar samjhaun?</button>
+              <button class="chip" type="button">Meetings that should be emails</button>
+              <button class="chip" type="button">Ye kaam kal tak hona chahiye tha</button>
+              <button class="chip" type="button">Don't get paid enough for this</button>
+              <button class="chip" type="button">Who approved this nonsense?</button>
+              <button class="chip" type="button">Mujhe mat sikha</button>
+            </div>
           </div>
+        </div>
 
-          <div class="app-input" id="drop">
-            <textarea id="input" rows="5" placeholder="What you really want to say..."></textarea>
-            <div class="app-input-meta">
-              <span id="drop-label" class="drop-hint" hidden>Drop screenshot, paste, or browse</span>
-              <div class="app-actions">
+        <footer class="composer" id="composer">
+          <div class="composer-inner" id="drop">
+            <textarea id="input" rows="1" placeholder="What you really want to say..."></textarea>
+            <div class="composer-row">
+              <span class="drop-hint" id="drop-label" hidden>Drop screenshot, paste, or browse</span>
+              <div class="composer-actions">
                 <button class="icon-btn" id="mic" type="button" title="Voice input">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
                 </button>
-                <button class="btn-primary" id="go" type="button">
-                  <span id="go-label">Translate</span>
+                <button class="btn-primary" id="send" type="button" title="Send (⏎)">
+                  <span id="send-label">Send</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                 </button>
               </div>
             </div>
+            <div class="thumb" id="thumb" hidden><img id="thumb-img" alt="" /><button class="thumb-x" id="thumb-x" type="button" title="Remove">×</button></div>
           </div>
-
-          <div class="chips" id="chips">
-            <button class="chip" type="button">Bhai kitni baar samjhaun?</button>
-            <button class="chip" type="button">Meetings that should be emails</button>
-            <button class="chip" type="button">Ye kaam kal tak hona chahiye tha</button>
-            <button class="chip" type="button">Don't get paid enough for this</button>
-            <button class="chip" type="button">Who approved this nonsense?</button>
-            <button class="chip" type="button">Mujhe mat sikha</button>
-          </div>
-
-          <div class="output" id="output" hidden>
-            <div class="output-head">
-              <span>Output</span>
-              <button class="btn-ghost sm" id="copy" type="button">Copy</button>
-            </div>
-            <pre id="output-body"></pre>
-          </div>
-        </aside>
-      </div>
+        </footer>
+      </section>
     </section>
 
     <section id="how" class="how">
@@ -144,8 +139,8 @@
           </div>
           <div class="step">
             <span class="step-num">03</span>
-            <h3>Copy and send with confidence</h3>
-            <p>The output is ready to paste. Your reputation stays intact, and nobody knows what you almost sent.</p>
+            <h3>Iterate in chat until it's right</h3>
+            <p>Ask for a shorter version, a sharper tone, a follow-up line. The conversation stays saved locally.</p>
           </div>
         </div>
       </div>
@@ -159,8 +154,8 @@
           <div class="feature"><div class="f-ico">🎛️</div><h3>Tone Control</h3><p>Gentle, Balanced, or Spicy. Pick how direct you want to be — the AI adjusts word choice to sign-off.</p></div>
           <div class="feature"><div class="f-ico">🌍</div><h3>7 Languages</h3><p>English, Hindi, Hinglish, Spanish, Portuguese, French, and Mandarin.</p></div>
           <div class="feature"><div class="f-ico">🎙️</div><h3>Voice Input</h3><p>Tap the mic and speak. Perfect for when typing your frustration would take too long.</p></div>
-          <div class="feature"><div class="f-ico">🧩</div><h3>Chrome Extension<span class="soon">Coming Soon</span></h3><p>Right-click any text in Gmail, Slack, or LinkedIn and cooperatify it, without leaving the page.</p></div>
-          <div class="feature"><div class="f-ico">💬</div><h3>Conversation History</h3><p>Every translation is saved locally. Search, revisit, and reuse past conversations anytime.</p></div>
+          <div class="feature"><div class="f-ico">🧩</div><h3>Chrome Extension</h3><p>Right-click any text in Gmail, Slack, or LinkedIn and cooperatify it without leaving the page.</p></div>
+          <div class="feature"><div class="f-ico">💬</div><h3>Conversation History</h3><p>Every chat is saved locally in your browser. Search, revisit, and continue past conversations anytime.</p></div>
         </div>
       </div>
     </section>
@@ -168,9 +163,10 @@
     <section id="faq" class="faq">
       <div class="wrap">
         <h2>FAQ</h2>
-        <details><summary>Is my text stored anywhere?</summary><p>History is saved locally in your browser. Nothing leaves the device except the call to the translation model.</p></details>
+        <details><summary>Is my text stored anywhere?</summary><p>All conversations are saved locally in your browser (<code>localStorage</code>). Nothing leaves the device except the API call to the translation model.</p></details>
         <details><summary>Which languages are supported?</summary><p>English, Hindi, Hinglish, Spanish, Portuguese, French, and Mandarin.</p></details>
         <details><summary>How is Reply different from Translate?</summary><p>Translate rewrites your own words. Reply takes a message (text or screenshot) and composes a response to it.</p></details>
+        <details><summary>Can I iterate on a draft?</summary><p>Yes. After the first reply, just keep chatting — "make it shorter", "less formal", "add a follow-up" — and the draft updates.</p></details>
       </div>
     </section>
   </main>

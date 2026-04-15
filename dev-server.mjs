@@ -26,13 +26,19 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-// Lazy-import the Vercel-style handler and shim req/res.
-let apiHandler;
-async function callApi(req, res, body) {
-  if (!apiHandler) {
-    const mod = await import('./api/translate.js');
-    apiHandler = mod.default;
-  }
+// Lazy-import Vercel-style handlers from /api/*.js and shim req/res.
+const handlerCache = new Map();
+async function loadHandler(name) {
+  if (handlerCache.has(name)) return handlerCache.get(name);
+  try {
+    const mod = await import(`./api/${name}.js`);
+    handlerCache.set(name, mod.default);
+    return mod.default;
+  } catch { return null; }
+}
+async function callApi(name, req, res, body) {
+  const h = await loadHandler(name);
+  if (!h) { res.writeHead(404).end('api handler not found'); return; }
   let parsed = {};
   try { parsed = body ? JSON.parse(body) : {}; } catch { parsed = {}; }
   const shimReq = Object.assign(req, { body: parsed });
@@ -44,16 +50,17 @@ async function callApi(req, res, body) {
       return this;
     },
   });
-  return apiHandler(shimReq, shimRes);
+  return h(shimReq, shimRes);
 }
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
-  if (url.pathname === '/api/translate') {
+  const apiMatch = url.pathname.match(/^\/api\/([A-Za-z0-9_-]+)$/);
+  if (apiMatch) {
     const chunks = [];
     for await (const c of req) chunks.push(c);
-    return callApi(req, res, Buffer.concat(chunks).toString('utf8'));
+    return callApi(apiMatch[1], req, res, Buffer.concat(chunks).toString('utf8'));
   }
 
   let filePath = path.join(__dirname, url.pathname === '/' ? 'index.html' : url.pathname);

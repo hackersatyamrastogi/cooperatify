@@ -1,0 +1,93 @@
+// Vercel Serverless — POST /api/chat
+// Multi-turn conversation. Body: { mode, format, tone, messages:[{role,content}], screenshot? }
+
+const FORMATS = {
+  slack: 'Slack message: short, direct, no subject line, plain prose, emoji OK if they help.',
+  email: 'Email: first line "Subject: ...", blank line, then body with greeting and sign-off.',
+  linkedin: 'LinkedIn post or DM: professional, slightly warm, clear structure, no hashtags unless obvious.',
+};
+
+const TONES = {
+  gentle: 'Gentle — soft and empathetic, avoid anything blunt, cushion any critique, lead with appreciation.',
+  balanced: 'Balanced — professional and natural, the sweet spot between firm and friendly.',
+  spicy: "Spicy — bold and direct, do not sugarcoat, but remain professional (no insults, no profanity).",
+};
+
+function systemPrompt(mode, format, tone) {
+  const fmt = FORMATS[format] || FORMATS.slack;
+  const tn = TONES[tone] || TONES.balanced;
+  const task =
+    mode === 'reply'
+      ? 'You read the user-provided message (text or screenshot) and draft a response to it.'
+      : 'You rewrite the user-provided text into polished professional communication — a rewrite of their own words, not a reply.';
+  return [
+    'You are Cooperatify, an AI corporate-language translator operating in a chat interface.',
+    task,
+    'The user may write in English, Hindi, Hinglish, Spanish, Portuguese, French, or Mandarin. Always output in English unless they explicitly request another language.',
+    'When the user asks for tweaks ("make it shorter", "sharper tone", "add a follow-up line"), adjust the most recent draft accordingly.',
+    `Target format — ${fmt}`,
+    `Target tone — ${tn}`,
+    'Output ONLY the drafted message. No preamble, no explanations, no options, no markdown code fences. If the user asks a meta-question about their message (e.g., "is this too harsh?"), answer briefly then provide the revised draft.',
+  ].join('\n');
+}
+
+function cors(res) {
+  res.setHeader('access-control-allow-origin', '*');
+  res.setHeader('access-control-allow-methods', 'POST, OPTIONS');
+  res.setHeader('access-control-allow-headers', 'content-type');
+}
+
+export default async function handler(req, res) {
+  cors(res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
+
+  try {
+    const { mode = 'translate', format = 'slack', tone = 'balanced', messages = [], screenshot = null } = req.body || {};
+    if (!Array.isArray(messages) || messages.length === 0) return res.status(400).json({ error: 'messages required' });
+
+    // Map UI messages → Anthropic messages. Attach screenshot (if any) to the final user turn.
+    const mapped = messages
+      .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+      .map((m) => ({ role: m.role, content: [{ type: 'text', text: m.content }] }));
+
+    if (screenshot && mapped.length && mapped[mapped.length - 1].role === 'user') {
+      const m = /^data:(image\/[^;]+);base64,(.+)$/.exec(screenshot);
+      if (m) {
+        mapped[mapped.length - 1].content.unshift({
+          type: 'image',
+          source: { type: 'base64', media_type: m[1], data: m[2] },
+        });
+      }
+    }
+
+    const body = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: systemPrompt(mode, format, tone),
+      messages: mapped,
+    };
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json({ error: data.error?.message || 'Upstream error' });
+    const output = (data.content || [])
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n')
+      .trim();
+    const usage = data.usage || null;
+    res.status(200).json({ output, usage });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Server error' });
+  }
+}
