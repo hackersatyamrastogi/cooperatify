@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Cooperatify</title>
+<style>
+  :root { color-scheme: dark; }
+  body { width: 340px; margin: 0; font: 13.5px/1.45 Inter, system-ui, sans-serif; background: #0b0b10; color: #f5f6fa; }
+  .hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #2a2d3f; font-weight: 700; }
+  .dot { width: 16px; height: 16px; border-radius: 5px; background: conic-gradient(from 210deg, #a78bfa, #60a5fa, #f472b6, #a78bfa); }
+  .tabs { display: flex; gap: 4px; margin: 10px 12px 0; background: #0f1019; border: 1px solid #2a2d3f; border-radius: 10px; padding: 3px; }
+  .tab { flex: 1; padding: 6px; font: inherit; color: #b5b8c8; background: transparent; border: 0; border-radius: 8px; cursor: pointer; }
+  .tab.on { background: #222438; color: #f5f6fa; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 12px 0; }
+  select, textarea, button { font: inherit; }
+  select, textarea { width: 100%; background: #0f1019; color: #f5f6fa; border: 1px solid #2a2d3f; border-radius: 8px; padding: 8px; box-sizing: border-box; }
+  textarea { margin: 10px 12px 0; width: calc(100% - 24px); min-height: 80px; resize: vertical; }
+  .go { margin: 10px 12px; display: flex; justify-content: space-between; gap: 8px; }
+  .go button { flex: 1; padding: 9px; border: 0; border-radius: 9px; cursor: pointer; }
+  .primary { background: linear-gradient(135deg, #a78bfa, #60a5fa); color: #0b0b10; font-weight: 600; }
+  .ghost { background: #0f1019; color: #f5f6fa; border: 1px solid #2a2d3f !important; }
+  pre { margin: 0 12px 12px; padding: 10px; background: #0f1019; border: 1px solid #2a2d3f; border-radius: 8px; white-space: pre-wrap; max-height: 180px; overflow: auto; }
+  .foot { display: flex; justify-content: space-between; padding: 8px 14px 12px; color: #7b7f94; font-size: 11.5px; border-top: 1px solid #2a2d3f; }
+  a { color: #a78bfa; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div class="hd"><span class="dot"></span> cooperatify</div>
+  <div class="tabs">
+    <button class="tab on" data-mode="translate">Translate</button>
+    <button class="tab" data-mode="reply">Reply</button>
+  </div>
+  <div class="row">
+    <select id="format">
+      <option value="slack">Slack</option>
+      <option value="email">Email</option>
+      <option value="linkedin">LinkedIn</option>
+    </select>
+    <select id="tone">
+      <option value="gentle">Gentle</option>
+      <option value="balanced" selected>Balanced</option>
+      <option value="spicy">Spicy</option>
+    </select>
+  </div>
+  <textarea id="input" placeholder="What you really want to say..."></textarea>
+  <div class="go">
+    <button class="ghost" id="paste">Paste selection</button>
+    <button class="primary" id="go">Translate</button>
+  </div>
+  <pre id="out" hidden></pre>
+  <div class="foot">
+    <a href="#" id="options">Settings</a>
+    <span>v0.1.0</span>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
