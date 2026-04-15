@@ -1,10 +1,13 @@
-// Cooperatify MV3 service worker — context menus + API bridge
+// corporatefilter.ai MV3 service worker — context menus + API bridge
+
+// Shortened prefix keeps context-menu labels under Chrome's ~60-char soft limit.
+// "CF" = corporatefilter.
 
 const MENU = [
-  { id: 'coop-rewrite-balanced', title: '✨ Cooperatify: Rewrite (Balanced)', tone: 'balanced', mode: 'translate' },
-  { id: 'coop-rewrite-gentle',   title: '🌸 Cooperatify: Rewrite (Gentle)',   tone: 'gentle',   mode: 'translate' },
-  { id: 'coop-rewrite-spicy',    title: '🌶️ Cooperatify: Rewrite (Spicy)',    tone: 'spicy',    mode: 'translate' },
-  { id: 'coop-reply-balanced',   title: '💬 Cooperatify: Reply (Balanced)',   tone: 'balanced', mode: 'reply' },
+  { id: 'coop-rewrite-balanced', title: '✨ CF: Rewrite (Balanced)', tone: 'balanced', mode: 'translate' },
+  { id: 'coop-rewrite-gentle',   title: '🌸 CF: Rewrite (Gentle)',   tone: 'gentle',   mode: 'translate' },
+  { id: 'coop-rewrite-spicy',    title: '🌶️ CF: Rewrite (Spicy)',    tone: 'spicy',    mode: 'translate' },
+  { id: 'coop-reply-balanced',   title: '💬 CF: Reply (Balanced)',   tone: 'balanced', mode: 'reply' },
 ];
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -26,7 +29,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     chrome.tabs.sendMessage(tab.id, { type: 'coop:toast', text: 'Select some text first.' });
     return;
   }
-  chrome.tabs.sendMessage(tab.id, { type: 'coop:toast', text: 'Cooperatifying…' });
+  chrome.tabs.sendMessage(tab.id, { type: 'coop:toast', text: 'corporatefilter.aiing…' });
   try {
     const res = await fetch(`${apiBase.replace(/\/$/, '')}/api/translate`, {
       method: 'POST',

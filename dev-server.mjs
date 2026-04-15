@@ -76,5 +76,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   const hasKey = !!process.env.ANTHROPIC_API_KEY;
-  console.log(`cooperatify dev → http://localhost:${PORT}  (ANTHROPIC_API_KEY: ${hasKey ? 'ok' : 'MISSING'})`);
+  console.log(`corporatefilter.ai dev → http://localhost:${PORT}  (ANTHROPIC_API_KEY: ${hasKey ? 'ok' : 'MISSING'})`);
 });

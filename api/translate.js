@@ -21,7 +21,7 @@ function systemPrompt(mode, format, tone) {
       ? 'You read the user-provided message (text or screenshot) and craft a response to it.'
       : 'You rewrite the user-provided text into polished professional communication (not a reply — a rewrite of their own words).';
   return [
-    'You are Cooperatify, an AI corporate-language translator.',
+    'You are corporatefilter.ai, an AI corporate-language translator.',
     task,
     'The user may write in English, Hindi, Hinglish, Spanish, Portuguese, French, or Mandarin. Always output in English unless they explicitly ask otherwise.',
     `Target format — ${fmt}`,

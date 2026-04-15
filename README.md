@@ -1,33 +1,39 @@
-# cooperatify
+# corporatefilter.ai
 
-Clone of https://cooperatify.pro/ — AI corporate-language translator.
+AI-powered corporate language translator — type the real thing, send the right thing.
+Turns unfiltered thoughts (in 7 languages) into polished Slack, Email, or LinkedIn messages.
 
-**Stack:** static HTML/CSS/JS + Cloudflare Pages Function (`functions/api/translate.js`) calling the Anthropic API.
+**Stack:** static HTML/CSS/JS + Vercel serverless functions (`/api/chat`, `/api/translate`, `/api/auth/*`) calling Claude Sonnet 4.6.
 
 ## Run locally
 
 ```bash
-npx wrangler pages dev . --compatibility-date=2025-01-01
+node dev-server.mjs
+# or: npm run dev (uses Vercel CLI)
 ```
 
-Set `ANTHROPIC_API_KEY` in `.dev.vars`:
+Loads `.env.local`:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
+SESSION_SECRET=<random 48+ bytes>
+GITHUB_CLIENT_ID=<github oauth app>
+GITHUB_CLIENT_SECRET=<github oauth app>
+COOP_INSECURE_COOKIES=1   # dev only — drops Secure on cookies over http
 ```
 
-## Deploy (Cloudflare Pages, AI_Satyam account)
+## Deploy
 
-```bash
-npx wrangler pages deploy . --project-name cooperatify
-# set prod secret
-npx wrangler pages secret put ANTHROPIC_API_KEY --project-name cooperatify
-```
+Pushes to `main` auto-deploy via the Vercel GitHub integration.
+Production is https://cooperatify.vercel.app (custom domain pending).
 
-## Features wired
+## Features
 
-- Translate / Reply tabs
-- Format: Slack / Email / LinkedIn
-- Tone: Gentle / Balanced / Spicy (with live hint)
-- Example chips, voice input (Web Speech API), screenshot paste/drop (vision in Reply mode)
-- Local history in `localStorage`
+- **Chat** — multi-turn, tone/format per-conversation, local-first storage
+- **Translate / Reply** modes (Reply supports screenshots via Claude vision)
+- **Tone**: Gentle · Balanced · Spicy
+- **Format**: Slack · Email · LinkedIn
+- **Voice input** (Web Speech API) · drag/paste screenshots · Enter-to-send
+- **Sign in with GitHub** (HMAC-signed cookie session)
+- **Dark / light theme** toggle
+- **Chrome MV3 extension** at `extension/` — right-click rewrite in Gmail, Slack, LinkedIn

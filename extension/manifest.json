@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Cooperatify",
+  "name": "corporatefilter.ai",
   "version": "0.1.0",
   "description": "Type the real thing. Send the right thing. AI corporate-language translator for Gmail, Slack, and LinkedIn.",
   "action": {
-    "default_title": "Cooperatify",
+    "default_title": "corporatefilter.ai",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

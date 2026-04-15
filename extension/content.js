@@ -1,4 +1,4 @@
-// Cooperatify content script — toasts + replace selection with output
+// corporatefilter.ai content script — toasts + replace selection with output
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === 'coop:toast') return showToast(msg.text);
@@ -54,7 +54,7 @@ function showCard(output) {
   card.id = 'coop-card';
   card.innerHTML = `
     <div class="coop-card-head">
-      <span class="coop-brand"><span class="coop-dot"></span> cooperatify</span>
+      <span class="coop-brand"><span class="coop-dot"></span> corporatefilter.ai</span>
       <button class="coop-x" title="Close">×</button>
     </div>
     <pre class="coop-body"></pre>

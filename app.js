@@ -1,9 +1,22 @@
-// Cooperatify chat — multi-turn with local-only conversations.
+// corporatefilter.ai chat — multi-turn with local-only conversations.
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
-const STORE_KEY = 'cooperatify:conversations:v1';
-const ACTIVE_KEY = 'cooperatify:activeId';
+const STORE_KEY = 'corporatefilter:conversations:v1';
+const ACTIVE_KEY = 'corporatefilter:activeId';
+const LEGACY_STORE_KEY = 'cooperatify:conversations:v1';
+const LEGACY_ACTIVE_KEY = 'cooperatify:activeId';
+// One-time migration from the old brand's storage keys
+try {
+  if (!localStorage.getItem(STORE_KEY) && localStorage.getItem(LEGACY_STORE_KEY)) {
+    localStorage.setItem(STORE_KEY, localStorage.getItem(LEGACY_STORE_KEY));
+    localStorage.removeItem(LEGACY_STORE_KEY);
+  }
+  if (!localStorage.getItem(ACTIVE_KEY) && localStorage.getItem(LEGACY_ACTIVE_KEY)) {
+    localStorage.setItem(ACTIVE_KEY, localStorage.getItem(LEGACY_ACTIVE_KEY));
+    localStorage.removeItem(LEGACY_ACTIVE_KEY);
+  }
+} catch {}
 
 const TONE_HINTS = {
   gentle: 'Soft and empathetic, avoids anything blunt.',
@@ -125,7 +138,7 @@ function bubble(m) {
   const el = document.createElement('div');
   el.className = `bubble ${m.role}`;
   if (m.thinking) el.classList.add('thinking');
-  const label = m.role === 'user' ? 'You' : 'Cooperatify';
+  const label = m.role === 'user' ? 'You' : 'corporatefilter.ai';
   const shot = m.screenshot ? `<img class="shot" src="${m.screenshot}" alt="attachment" />` : '';
   const body = m.thinking ? 'Thinking…' : escapeHtml(m.content);
   const actions = m.role === 'assistant' && !m.thinking
@@ -348,7 +361,7 @@ function paintTheme() {
 themeBtn?.addEventListener('click', () => {
   const next = (document.documentElement.dataset.theme === 'dark') ? 'light' : 'dark';
   document.documentElement.dataset.theme = next;
-  try { localStorage.setItem('cooperatify:theme', next); } catch {}
+  try { localStorage.setItem('corporatefilter:theme', next); } catch {}
   paintTheme();
 });
 paintTheme();
