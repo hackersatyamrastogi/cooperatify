@@ -224,9 +224,19 @@ export async function handleSlashCommand({ text, user_id, team_id, user_name }) 
 }
 
 // Handle retone_* button clicks.
-export async function handleBlockActions(payload) {
+export function handleBlockActions(payload) {
   const action = payload.actions?.[0];
   if (!action || !action.action_id?.startsWith('retone_')) return null;
+  const responseUrl = payload.response_url;
+
+  // Ack immediately with loading state, process async
+  processRetone(payload, action, responseUrl).catch(console.error);
+
+  // Return immediate ack (replaces message with "Rewriting...")
+  return { replace_original: true, text: 'Rewriting in a different tone...' };
+}
+
+async function processRetone(payload, action, responseUrl) {
   const ctx = JSON.parse(action.value);
   const tone = ctx.tone;
   try {
@@ -236,9 +246,22 @@ export async function handleBlockActions(payload) {
         id: `slack:${payload.team?.id}:${payload.user?.id}`, email: `${payload.user?.name}@slack.${payload.team?.id}`, sub: payload.user?.id,
       });
     } catch {}
-    return { replace_original: true, ...resultBlocks({ original: ctx.original, output, tone, format: ctx.format, mode: ctx.mode }) };
+    const body = { replace_original: true, ...resultBlocks({ original: ctx.original, output, tone, format: ctx.format, mode: ctx.mode }) };
+    if (responseUrl) {
+      await fetch(responseUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    }
   } catch (e) {
-    return { replace_original: false, response_type: 'ephemeral', text: `⚠️ ${e.message}` };
+    if (responseUrl) {
+      await fetch(responseUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ replace_original: false, response_type: 'ephemeral', text: 'Error: ' + e.message }),
+      });
+    }
   }
 }
 

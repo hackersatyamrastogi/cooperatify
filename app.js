@@ -471,6 +471,28 @@ async function stream(c, pending, screenshot) {
   try { renderSidebar(); } catch (e) {}
 }
 
+// Handle ?slack_installed=... or ?slack_error=...
+(function handleSlackCallback() {
+  var p = new URLSearchParams(location.search);
+  var installed = p.get('slack_installed');
+  var slackErr = p.get('slack_error');
+  if (!installed && !slackErr) return;
+  history.replaceState({}, '', location.pathname + (isPWA ? '?pwa=1' : ''));
+  if (installed) {
+    showSlackToast('CorporateFilter.AI installed to ' + installed + '! Type /filter in Slack to start.');
+  } else if (slackErr) {
+    showSlackToast('Slack install failed: ' + slackErr, true);
+  }
+})();
+
+function showSlackToast(text, isError) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:' + (isError ? '#ff3333' : '#ffcc00') + ';color:#000;padding:14px 20px;border-radius:12px;font-family:Space Grotesk,system-ui;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-width:90vw;text-align:center;animation:cf-in .2s ease;';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.remove(); }, 300); }, 5000);
+}
+
 // Handle ?auth_error=... from a failed OAuth redirect
 (function handleAuthError() {
   const p = new URLSearchParams(location.search);
