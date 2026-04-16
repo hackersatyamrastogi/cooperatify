@@ -2,27 +2,44 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>corporatefilter.ai — Settings</title>
+<title>corporatefilter.ai - Settings</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
   :root { color-scheme: dark; }
-  body { width: 380px; margin: 0; padding: 20px; font: 14px/1.5 Inter, system-ui, sans-serif; background: #0b0b10; color: #f5f6fa; }
-  h1 { margin: 0 0 14px; font-size: 16px; }
-  label { display: block; font-size: 12px; color: #b5b8c8; margin: 12px 0 4px; }
-  input, select { width: 100%; background: #0f1019; color: #f5f6fa; border: 1px solid #2a2d3f; border-radius: 8px; padding: 9px; box-sizing: border-box; font: inherit; }
-  button { margin-top: 16px; padding: 9px 16px; border: 0; border-radius: 9px; background: linear-gradient(135deg, #a78bfa, #60a5fa); color: #0b0b10; font-weight: 600; cursor: pointer; }
-  .ok { color: #34d399; font-size: 12px; margin-top: 8px; min-height: 16px; }
+  body { width: 400px; margin: 0; padding: 20px; font: 14px/1.5 Inter, system-ui, sans-serif; background: #000; color: #fff; }
+  h1 { font-family: 'Space Grotesk', system-ui; font-size: 16px; font-weight: 700; margin: 0 0 16px; }
+  h1 .ai { color: #ffcc00; }
+  label { display: block; font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; margin: 14px 0 4px; }
+  input, select { width: 100%; background: #141414; color: #fff; border: 1px solid #2a2a2a; border-radius: 8px; padding: 9px; box-sizing: border-box; font: inherit; font-size: 13px; }
+  input:focus, select:focus { border-color: #ffcc00; outline: none; }
+  .toggle { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .toggle input[type="checkbox"] { width: auto; accent-color: #ffcc00; }
+  .toggle span { font-family: 'Space Grotesk', system-ui; font-size: 13px; font-weight: 500; }
+  button { margin-top: 18px; padding: 9px 18px; border: 0; border-radius: 9px; background: #ffcc00; color: #000; font-family: 'Space Grotesk', system-ui; font-weight: 700; font-size: 13px; cursor: pointer; }
+  button:hover { filter: brightness(1.06); }
+  .ok { color: #34d399; font-family: 'Space Mono', monospace; font-size: 11px; margin-top: 8px; min-height: 16px; }
 </style>
 </head>
 <body>
-  <h1>corporatefilter.ai — settings</h1>
+  <h1>corporatefilter<span class="ai">.ai</span> settings</h1>
   <label>API base URL</label>
-  <input id="apiBase" placeholder="https://cooperatify.vercel.app" />
+  <input id="apiBase" placeholder="https://corporatefilter.ai" />
   <label>Default format</label>
   <select id="format">
     <option value="slack">Slack</option>
     <option value="email">Email</option>
     <option value="linkedin">LinkedIn</option>
+    <option value="teams">Teams</option>
+    <option value="discord">Discord</option>
+    <option value="whatsapp">WhatsApp</option>
+    <option value="telegram">Telegram</option>
+    <option value="chat">Chat</option>
+    <option value="message">Message (generic)</option>
   </select>
+  <div class="toggle">
+    <input type="checkbox" id="fabEnabled" />
+    <span>Show floating action button on text selection</span>
+  </div>
   <button id="save">Save</button>
   <div class="ok" id="ok"></div>
   <script src="options.js"></script>

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "corporatefilter.ai",
-  "version": "0.1.0",
-  "description": "Type the real thing. Send the right thing. AI corporate-language translator for Gmail, Slack, and LinkedIn.",
+  "version": "0.2.0",
+  "description": "Type the real thing. Send the right thing. AI corporate-language translator for any chat app or website.",
   "action": {
     "default_title": "corporatefilter.ai",
     "default_popup": "popup.html",
@@ -23,26 +23,14 @@
   },
   "permissions": ["contextMenus", "storage", "scripting", "activeTab"],
   "host_permissions": [
-    "https://mail.google.com/*",
-    "https://app.slack.com/*",
-    "https://*.slack.com/*",
-    "https://www.linkedin.com/*",
-    "https://cooperatify.vercel.app/*",
-    "http://localhost:3000/*"
+    "<all_urls>"
   ],
-  "content_scripts": [
-    {
-      "matches": [
-        "https://mail.google.com/*",
-        "https://app.slack.com/*",
-        "https://*.slack.com/*",
-        "https://www.linkedin.com/*"
-      ],
-      "js": ["content.js"],
-      "css": ["content.css"],
-      "run_at": "document_idle"
+  "commands": {
+    "trigger-rewrite": {
+      "suggested_key": { "default": "Alt+Shift+C" },
+      "description": "Rewrite selected text (Balanced)"
     }
-  ],
+  },
   "options_ui": {
     "page": "options.html",
     "open_in_tab": false

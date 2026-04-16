@@ -22,9 +22,10 @@ export async function translateWithClaude({ input, mode = 'translate', tone = 'b
     mode === 'reply'
       ? 'You read the user-provided message and draft a response to it.'
       : 'You rewrite the user-provided text into polished professional communication (a rewrite of their own words).',
-    `Target format — Slack message: short, direct, plain prose, emoji only if they help.`,
-    `Target tone — ${tone}.`,
+    `Target format: Slack message: short, direct, plain prose, emoji only if they help.`,
+    `Target tone: ${tone}.`,
     'Output ONLY the final message. No preamble, no options, no markdown code fences.',
+    'NEVER use em dash, en dash, or tilde characters in the output. Use commas, periods, or rephrase instead.',
   ].join('\n');
   const res = await fetch(ANTHROPIC_URL, {
     method: 'POST',
@@ -162,9 +163,9 @@ export async function handleAppHomeOpened(event) {
         { type: 'section', text: { type: 'mrkdwn', text: '*Type the real thing. Send the right thing.*\n\nI rewrite your unfiltered thoughts into polished professional messages.' } },
         { type: 'divider' },
         { type: 'section', text: { type: 'mrkdwn', text: '*How to use:*' } },
-        { type: 'section', text: { type: 'mrkdwn', text: '💬 *DM me* — just type your raw text and I\'ll rewrite it\n⌨️ *Slash command* — `/filter your text here`\n🌶️ *Prefix a tone* — `spicy: ye kaam kal tak hona chahiye tha`\n↩️ *Reply mode* — `reply: [paste a message you received]`' } },
+        { type: 'section', text: { type: 'mrkdwn', text: '💬 *DM me* just type your raw text and I\'ll rewrite it\n⌨️ *Slash command* `/filter your text here`\n🌶️ *Prefix a tone* `spicy: ye kaam kal tak hona chahiye tha`\n↩️ *Reply mode* `reply: [paste a message you received]`' } },
         { type: 'divider' },
-        { type: 'section', text: { type: 'mrkdwn', text: '*Tones:*\n🌸 `gentle:` — soft and empathetic\n⚖️ `balanced:` — the sweet spot (default)\n🌶️ `spicy:` — bold and direct' } },
+        { type: 'section', text: { type: 'mrkdwn', text: '*Tones:*\n🌸 `gentle:` soft and empathetic\n⚖️ `balanced:` the sweet spot (default)\n🌶️ `spicy:` bold and direct' } },
         { type: 'divider' },
         { type: 'context', elements: [{ type: 'mrkdwn', text: 'Built with Claude · <https://corporatefilter.ai|corporatefilter.ai>' }] },
       ],
@@ -196,7 +197,7 @@ export async function handleSlashCommand({ text, user_id, team_id, user_name }) 
   if (!raw) {
     return {
       response_type: 'ephemeral',
-      text: 'Usage: `/filter <your unfiltered message>` — I will rewrite it professionally.',
+      text: 'Usage: `/filter <your unfiltered message>` and I will rewrite it professionally.',
     };
   }
   // Optional flags: /filter spicy| or /filter reply| can prefix the text

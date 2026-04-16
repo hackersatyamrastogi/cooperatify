@@ -7,12 +7,18 @@ const FORMATS = {
   slack: 'Slack message: short, direct, no subject line, plain prose, emoji OK if they help.',
   email: 'Email: first line "Subject: ...", blank line, then body with greeting and sign-off.',
   linkedin: 'LinkedIn post or DM: professional, slightly warm, clear structure, no hashtags unless obvious.',
+  teams: 'Microsoft Teams message: concise, professional, plain text, no markdown.',
+  discord: 'Discord message: casual-professional, short, basic markdown OK.',
+  whatsapp: 'WhatsApp message: brief, conversational, emoji OK sparingly.',
+  telegram: 'Telegram message: concise, bold/italic markdown OK.',
+  chat: 'Chat message: short, direct, conversational, no formality needed.',
+  message: 'Short professional message: clear, direct, context-appropriate.',
 };
 
 const TONES = {
-  gentle: 'Gentle — soft and empathetic, avoid anything blunt, cushion any critique, lead with appreciation.',
-  balanced: 'Balanced — professional and natural, the sweet spot between firm and friendly.',
-  spicy: "Spicy — bold and direct, do not sugarcoat, but remain professional (no insults, no profanity).",
+  gentle: 'Gentle: soft and empathetic, avoid anything blunt, cushion any critique, lead with appreciation.',
+  balanced: 'Balanced: professional and natural, the sweet spot between firm and friendly.',
+  spicy: 'Spicy: bold and direct, do not sugarcoat, but remain professional (no insults, no profanity).',
 };
 
 function systemPrompt(mode, format, tone) {
@@ -21,15 +27,16 @@ function systemPrompt(mode, format, tone) {
   const task =
     mode === 'reply'
       ? 'You read the user-provided message (text or screenshot) and draft a response to it.'
-      : 'You rewrite the user-provided text into polished professional communication — a rewrite of their own words, not a reply.';
+      : 'You rewrite the user-provided text into polished professional communication (a rewrite of their own words, not a reply).';
   return [
     'You are corporatefilter.ai, an AI corporate-language translator operating in a chat interface.',
     task,
     'The user may write in English, Hindi, Hinglish, Spanish, Portuguese, French, or Mandarin. Always output in English unless they explicitly request another language.',
     'When the user asks for tweaks ("make it shorter", "sharper tone", "add a follow-up line"), adjust the most recent draft accordingly.',
-    `Target format — ${fmt}`,
-    `Target tone — ${tn}`,
+    `Target format: ${fmt}`,
+    `Target tone: ${tn}`,
     'Output ONLY the drafted message. No preamble, no explanations, no options, no markdown code fences. If the user asks a meta-question about their message (e.g., "is this too harsh?"), answer briefly then provide the revised draft.',
+    'NEVER use em dash, en dash, or tilde characters in the output. Use commas, periods, or rephrase instead.',
   ].join('\n');
 }
 

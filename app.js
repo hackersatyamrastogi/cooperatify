@@ -541,3 +541,16 @@ paintTheme();
 renderSidebar();
 renderChat();
 $('#yr').textContent = new Date().getFullYear();
+
+// PWA: register service worker + detect standalone mode
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+const isPWA = window.matchMedia('(display-mode: standalone)').matches
+  || navigator.standalone === true
+  || new URLSearchParams(location.search).has('pwa');
+if (isPWA) {
+  document.documentElement.classList.add('pwa');
+  // In PWA mode, auto-open or create a new chat if none active
+  if (!active()) newConv();
+}

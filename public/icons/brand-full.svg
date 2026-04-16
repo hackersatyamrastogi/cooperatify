@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 40" height="40">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffdd33"/>
+      <stop offset="100%" stop-color="#ffcc00"/>
+    </radialGradient>
+  </defs>
+  <circle cx="16" cy="20" r="10" fill="url(#g)"/>
+  <text x="34" y="27" font-family="'Space Grotesk', system-ui, sans-serif" font-size="22" font-weight="700" fill="#fff" letter-spacing="-0.3">corporatefilter<tspan fill="#ffcc00">.ai</tspan></text>
+</svg>

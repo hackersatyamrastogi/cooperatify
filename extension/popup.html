@@ -4,53 +4,96 @@
 <meta charset="utf-8" />
 <title>corporatefilter.ai</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
   :root { color-scheme: dark; }
-  body { width: 340px; margin: 0; font: 13.5px/1.45 Inter, system-ui, sans-serif; background: #0b0b10; color: #f5f6fa; }
-  .hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #2a2d3f; font-weight: 700; }
-  .dot { width: 16px; height: 16px; border-radius: 5px; background: conic-gradient(from 210deg, #a78bfa, #60a5fa, #f472b6, #a78bfa); }
-  .tabs { display: flex; gap: 4px; margin: 10px 12px 0; background: #0f1019; border: 1px solid #2a2d3f; border-radius: 10px; padding: 3px; }
-  .tab { flex: 1; padding: 6px; font: inherit; color: #b5b8c8; background: transparent; border: 0; border-radius: 8px; cursor: pointer; }
-  .tab.on { background: #222438; color: #f5f6fa; }
+  body { width: 360px; margin: 0; font: 13.5px/1.45 Inter, system-ui, sans-serif; background: #000; color: #fff; }
+  .hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #2a2a2a; font-family: 'Space Grotesk', system-ui; font-weight: 700; font-size: 13.5px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; background: #ffcc00; display: inline-block; }
+  .ai { color: #ffcc00; }
+  .tabs { display: flex; gap: 4px; margin: 10px 12px 0; background: #141414; border: 1px solid #2a2a2a; border-radius: 8px; padding: 3px; }
+  .tab { flex: 1; padding: 6px; font: inherit; font-family: 'Space Grotesk', system-ui; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); background: transparent; border: 0; border-radius: 6px; cursor: pointer; }
+  .tab.on { background: #ffcc00; color: #000; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 12px 0; }
-  select, textarea, button { font: inherit; }
-  select, textarea { width: 100%; background: #0f1019; color: #f5f6fa; border: 1px solid #2a2d3f; border-radius: 8px; padding: 8px; box-sizing: border-box; }
-  textarea { margin: 10px 12px 0; width: calc(100% - 24px); min-height: 80px; resize: vertical; }
+  .field-lbl { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin: 10px 12px 4px; display: block; }
+  select, textarea { font: inherit; }
+  select, textarea { width: calc(100% - 24px); margin: 0 12px; background: #141414; color: #fff; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px; box-sizing: border-box; font-size: 13px; }
+  select { width: 100%; margin: 0; }
+  textarea { min-height: 80px; resize: vertical; margin-top: 4px; font-family: 'Space Grotesk', system-ui; font-size: 14px; font-weight: 500; }
+  textarea::placeholder { color: rgba(255,255,255,0.3); }
+  select:focus, textarea:focus { border-color: #ffcc00; outline: none; }
   .go { margin: 10px 12px; display: flex; justify-content: space-between; gap: 8px; }
-  .go button { flex: 1; padding: 9px; border: 0; border-radius: 9px; cursor: pointer; }
-  .primary { background: linear-gradient(135deg, #a78bfa, #60a5fa); color: #0b0b10; font-weight: 600; }
-  .ghost { background: #0f1019; color: #f5f6fa; border: 1px solid #2a2d3f !important; }
-  pre { margin: 0 12px 12px; padding: 10px; background: #0f1019; border: 1px solid #2a2d3f; border-radius: 8px; white-space: pre-wrap; max-height: 180px; overflow: auto; }
-  .foot { display: flex; justify-content: space-between; padding: 8px 14px 12px; color: #7b7f94; font-size: 11.5px; border-top: 1px solid #2a2d3f; }
-  a { color: #a78bfa; text-decoration: none; }
+  .go button { flex: 1; padding: 9px; border: 0; border-radius: 9px; cursor: pointer; font-family: 'Space Grotesk', system-ui; font-size: 12.5px; font-weight: 600; }
+  .primary { background: #ffcc00; color: #000; }
+  .primary:hover { filter: brightness(1.06); }
+  .ghost { background: #141414; color: #fff; border: 1px solid #2a2a2a !important; }
+  .ghost:hover { border-color: #ffcc00 !important; }
+  .tones { display: flex; gap: 4px; margin: 0 12px; }
+  .tones[hidden] { display: none; }
+  .tp { flex: 1; padding: 5px; font: inherit; font-family: 'Space Grotesk', system-ui; font-size: 11px; font-weight: 600; border: 1px solid #2a2a2a; border-radius: 6px; background: transparent; color: rgba(255,255,255,0.5); cursor: pointer; text-align: center; }
+  .tp.on { background: #ffcc00; color: #000; border-color: #ffcc00; }
+  .out-wrap { position: relative; margin: 8px 12px 12px; }
+  .out-wrap[hidden] { display: none; }
+  pre { margin: 0; padding: 10px 10px 36px; background: #141414; border: 1px solid #2a2a2a; border-radius: 8px; white-space: pre-wrap; max-height: 200px; overflow: auto; font-family: 'Space Grotesk', system-ui; font-size: 13.5px; font-weight: 500; line-height: 1.55; }
+  .out-actions { position: absolute; bottom: 6px; right: 6px; display: flex; gap: 4px; }
+  .out-btn { padding: 4px 10px; border-radius: 6px; font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; border: 1px solid #2a2a2a; background: #0a0a0a; color: rgba(255,255,255,0.6); }
+  .out-btn:hover { border-color: #ffcc00; color: #ffcc00; }
+  .out-btn.copied { border-color: #34d399; color: #34d399; }
+  .foot { display: flex; justify-content: space-between; padding: 8px 14px 12px; color: rgba(255,255,255,0.3); font-family: 'Space Mono', monospace; font-size: 10px; border-top: 1px solid #2a2a2a; text-transform: uppercase; letter-spacing: 1.2px; }
+  a { color: #ffcc00; text-decoration: none; }
+  .detected { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.4px; margin: 8px 12px 0; }
 </style>
 </head>
 <body>
-  <div class="hd"><span class="dot"></span> corporatefilter.ai</div>
+  <div class="hd"><span class="dot"></span> corporatefilter<span class="ai">.ai</span></div>
   <div class="tabs">
     <button class="tab on" data-mode="translate">Translate</button>
     <button class="tab" data-mode="reply">Reply</button>
   </div>
+  <span class="detected" id="detected"></span>
   <div class="row">
-    <select id="format">
-      <option value="slack">Slack</option>
-      <option value="email">Email</option>
-      <option value="linkedin">LinkedIn</option>
-    </select>
-    <select id="tone">
-      <option value="gentle">Gentle</option>
-      <option value="balanced" selected>Balanced</option>
-      <option value="spicy">Spicy</option>
-    </select>
+    <div>
+      <span class="field-lbl">Format</span>
+      <select id="format">
+        <option value="slack">Slack</option>
+        <option value="email">Email</option>
+        <option value="linkedin">LinkedIn</option>
+        <option value="teams">Teams</option>
+        <option value="discord">Discord</option>
+        <option value="whatsapp">WhatsApp</option>
+        <option value="telegram">Telegram</option>
+        <option value="chat">Chat</option>
+        <option value="message">Message</option>
+      </select>
+    </div>
+    <div>
+      <span class="field-lbl">Tone</span>
+      <select id="tone">
+        <option value="gentle">Gentle</option>
+        <option value="balanced" selected>Balanced</option>
+        <option value="spicy">Spicy</option>
+      </select>
+    </div>
   </div>
   <textarea id="input" placeholder="What you really want to say..."></textarea>
   <div class="go">
-    <button class="ghost" id="paste">Paste selection</button>
+    <button class="ghost" id="paste-clip" title="Paste from clipboard">Paste</button>
+    <button class="ghost" id="paste-sel" title="Grab selected text from the page">From page</button>
     <button class="primary" id="go">Translate</button>
   </div>
-  <pre id="out" hidden></pre>
+  <div class="tones" id="tones" hidden>
+    <button class="tp" data-t="gentle">Gentle</button>
+    <button class="tp" data-t="balanced">Balanced</button>
+    <button class="tp" data-t="spicy">Spicy</button>
+  </div>
+  <div class="out-wrap" id="out-wrap" hidden>
+    <pre id="out"></pre>
+    <div class="out-actions">
+      <button class="out-btn" id="copy-out">Copy</button>
+    </div>
+  </div>
   <div class="foot">
     <a href="#" id="options">Settings</a>
-    <span>v0.1.0</span>
+    <span>v0.2.0</span>
   </div>
   <script src="popup.js"></script>
 </body>
