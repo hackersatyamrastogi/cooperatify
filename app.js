@@ -327,8 +327,11 @@ document.addEventListener('click', (e) => {
 
 const input = $('#input');
 input.addEventListener('input', () => autoGrow(input));
-input.addEventListener('keydown', (e) => {
+input.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+input.addEventListener('keypress', function(e) {
+  if (e.keyCode === 13 && !e.shiftKey) { e.preventDefault(); send(); }
 });
 function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 220) + 'px'; }
 
