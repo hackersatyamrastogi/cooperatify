@@ -487,11 +487,10 @@ async function stream(c, pending, screenshot) {
     google_audience_mismatch: 'Google ID token audience mismatch.',
     google_email_unverified: 'Your Google email isn\'t verified.',
   };
-  sessionStorage.setItem('coop:authError', msgs[err] || `Sign-in failed (${err}).`);
-  // Clean the URL
+  sessionStorage.setItem('coop:authError', msgs[err] || 'Sign-in failed (' + err + ').');
   history.replaceState({}, '', location.pathname);
-  // Open modal on next tick
-  setTimeout(() => openSigninModal(), 100);
+  // Only auto-open on desktop, not PWA/mobile (user can tap Sign in from drawer)
+  if (!isPWA) setTimeout(function() { openSigninModal(); }, 100);
 })();
 
 // --- Auth ---
@@ -717,7 +716,8 @@ if (isPWA) {
 
 // PWA install prompt (platform-aware)
 (function setupInstallBanner() {
-  if (isStandalone) return; // already installed
+  if (isStandalone) return;
+  if (isPWA) return; // PWA mode already shows chat-only view, no need for install banner
   if (localStorage.getItem('corporatefilter:install-dismissed')) return;
 
   const banner = $('#install-banner');
