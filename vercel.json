@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/api/auth/(.*)", "destination": "/api/auth/[...path]" },
+    { "source": "/api/slack/(.*)", "destination": "/api/slack/[...path]" },
+    { "source": "/api/admin/(.*)", "destination": "/api/admin/[...path]" }
+  ]
 }
