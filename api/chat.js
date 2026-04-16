@@ -1,5 +1,6 @@
-// Vercel Serverless — POST /api/chat
-// Multi-turn conversation. Body: { mode, format, tone, messages:[{role,content}], screenshot? }
+// Vercel Serverless - POST /api/chat
+// Multi-turn conversation with SSE streaming support.
+// Body: { mode, format, tone, messages:[{role,content}], screenshot?, stream? }
 import { currentUser } from './_session.js';
 import { recordEvent } from './_store.js';
 
@@ -46,6 +47,22 @@ function cors(res) {
   res.setHeader('access-control-allow-headers', 'content-type');
 }
 
+function buildMessages(messages, screenshot) {
+  const mapped = messages
+    .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+    .map((m) => ({ role: m.role, content: [{ type: 'text', text: m.content }] }));
+  if (screenshot && mapped.length && mapped[mapped.length - 1].role === 'user') {
+    const m = /^data:(image\/[^;]+);base64,(.+)$/.exec(screenshot);
+    if (m) {
+      mapped[mapped.length - 1].content.unshift({
+        type: 'image',
+        source: { type: 'base64', media_type: m[1], data: m[2] },
+      });
+    }
+  }
+  return mapped;
+}
+
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -53,29 +70,16 @@ export default async function handler(req, res) {
   if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
 
   try {
-    const { mode = 'translate', format = 'slack', tone = 'balanced', messages = [], screenshot = null } = req.body || {};
+    const { mode = 'translate', format = 'slack', tone = 'balanced', messages = [], screenshot = null, stream: wantStream = false } = req.body || {};
     if (!Array.isArray(messages) || messages.length === 0) return res.status(400).json({ error: 'messages required' });
 
-    // Map UI messages → Anthropic messages. Attach screenshot (if any) to the final user turn.
-    const mapped = messages
-      .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-      .map((m) => ({ role: m.role, content: [{ type: 'text', text: m.content }] }));
-
-    if (screenshot && mapped.length && mapped[mapped.length - 1].role === 'user') {
-      const m = /^data:(image\/[^;]+);base64,(.+)$/.exec(screenshot);
-      if (m) {
-        mapped[mapped.length - 1].content.unshift({
-          type: 'image',
-          source: { type: 'base64', media_type: m[1], data: m[2] },
-        });
-      }
-    }
-
-    const body = {
+    const mapped = buildMessages(messages, screenshot);
+    const apiBody = {
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: systemPrompt(mode, format, tone),
       messages: mapped,
+      stream: Boolean(wantStream),
     };
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -85,10 +89,73 @@ export default async function handler(req, res) {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(apiBody),
     });
+
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      return res.status(r.status).json({ error: err.error?.message || 'Upstream error' });
+    }
+
+    // Streaming mode: pipe SSE chunks to client
+    if (wantStream) {
+      res.setHeader('content-type', 'text/event-stream; charset=utf-8');
+      res.setHeader('cache-control', 'no-cache');
+      res.setHeader('connection', 'keep-alive');
+      res.statusCode = 200;
+
+      let fullText = '';
+      let usage = null;
+      const reader = r.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+            try {
+              const evt = JSON.parse(data);
+              if (evt.type === 'content_block_delta' && evt.delta?.text) {
+                fullText += evt.delta.text;
+                res.write(`data: ${JSON.stringify({ type: 'delta', text: evt.delta.text })}\n\n`);
+              }
+              if (evt.type === 'message_delta' && evt.usage) {
+                usage = { ...usage, ...evt.usage };
+              }
+              if (evt.type === 'message_start' && evt.message?.usage) {
+                usage = evt.message.usage;
+              }
+            } catch {}
+          }
+        }
+      } catch (e) {
+        res.write(`data: ${JSON.stringify({ type: 'error', error: e.message })}\n\n`);
+      }
+
+      res.write(`data: ${JSON.stringify({ type: 'done', output: fullText, usage })}\n\n`);
+      res.end();
+
+      try {
+        await recordEvent('chat', {
+          mode, format, tone, turns: mapped.length,
+          hasScreenshot: Boolean(screenshot),
+          inputTokens: usage?.input_tokens || 0,
+          outputTokens: usage?.output_tokens || 0,
+        }, currentUser(req));
+      } catch {}
+      return;
+    }
+
+    // Non-streaming mode (backward compat for extension + Slack)
     const data = await r.json();
-    if (!r.ok) return res.status(r.status).json({ error: data.error?.message || 'Upstream error' });
     const output = (data.content || [])
       .filter((b) => b.type === 'text')
       .map((b) => b.text)
@@ -97,8 +164,7 @@ export default async function handler(req, res) {
     const usage = data.usage || null;
     try {
       await recordEvent('chat', {
-        mode, format, tone,
-        turns: mapped.length,
+        mode, format, tone, turns: mapped.length,
         hasScreenshot: Boolean(screenshot),
         inputTokens: usage?.input_tokens || 0,
         outputTokens: usage?.output_tokens || 0,

@@ -387,20 +387,66 @@ async function stream(c, pending, screenshot) {
   const msgs = c.messages
     .filter((m) => m !== pending && !m.thinking)
     .map((m) => ({ role: m.role, content: m.content }));
-  const body = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs };
+  const body = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs, stream: true };
   if (screenshot) body.screenshot = screenshot;
+
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Request failed');
-    pending.content = data.output || '(empty)';
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Request failed');
+    }
+
+    // Read SSE stream, update bubble in real-time
     pending.thinking = false;
+    pending.content = '';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    const msgEl = $('#messages');
+    let bubbleBody = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const evt = JSON.parse(line.slice(6));
+          if (evt.type === 'delta' && evt.text) {
+            pending.content += evt.text;
+            if (!bubbleBody) {
+              renderChat();
+              const bubbles = msgEl.querySelectorAll('.bubble.assistant');
+              const last = bubbles[bubbles.length - 1];
+              bubbleBody = last?.querySelector('.body');
+            }
+            if (bubbleBody) {
+              bubbleBody.textContent = pending.content;
+              msgEl.scrollTop = msgEl.scrollHeight;
+            }
+          }
+          if (evt.type === 'done') {
+            pending.content = evt.output || pending.content || '(empty)';
+          }
+          if (evt.type === 'error') {
+            throw new Error(evt.error);
+          }
+        } catch (e) {
+          if (e.message && !e.message.includes('JSON')) throw e;
+        }
+      }
+    }
   } catch (err) {
-    pending.content = `Error: ${err.message}`;
+    pending.content = pending.content || `Error: ${err.message}`;
     pending.thinking = false;
   }
   c.updated = now(); save(); renderChat(); renderSidebar();
