@@ -2,11 +2,10 @@
 // NOTE: writes to local FS — does NOT persist on Vercel serverless.
 // Swap to Vercel KV / Upstash Redis for production.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.resolve(__dirname, '..', '.data');
+const DATA_DIR = process.env.VERCEL ? path.join(tmpdir(), 'cf-store') : path.resolve('.data');
 const STORE_PATH = path.join(DATA_DIR, 'store.json');
 
 const EMPTY = { users: [], events: [] };
