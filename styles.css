@@ -633,6 +633,102 @@ h2 { font-family: var(--grotesk); font-size: clamp(28px, 3.5vw, 40px); letter-sp
 }
 
 /* Install banner gets extra bottom space in PWA view */
+/* PWA top bar (menu + brand + new chat) */
+.pwa-bar { display: none; }
+.pwa .pwa-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 0 0 8px; gap: 8px;
+}
+.pwa-brand {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--grotesk); font-weight: 700; font-size: 14px; color: var(--text);
+}
+.pwa-icon-btn {
+  background: transparent; border: 1px solid var(--border); border-radius: 8px;
+  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+  color: var(--dim); cursor: pointer;
+}
+.pwa-icon-btn:hover { border-color: var(--yellow); color: var(--text); }
+
+/* PWA slide-out drawer */
+.pwa-drawer { position: fixed; inset: 0; z-index: 200; }
+.pwa-drawer[hidden] { display: none; }
+.pwa-drawer-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+}
+.pwa-drawer-panel {
+  position: absolute; top: 0; left: 0; bottom: 0; width: min(300px, 80vw);
+  background: var(--bg-subtle); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  animation: pwa-slide .2s ease;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@keyframes pwa-slide { from { transform: translateX(-100%); } to { transform: none; } }
+
+.pwa-drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px 10px; border-bottom: 1px solid var(--border);
+}
+.pwa-drawer-user {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+.pwa-drawer-user .user-info {
+  display: flex; align-items: center; gap: 10px;
+}
+.pwa-drawer-user .user-info img {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+}
+.pwa-drawer-user .user-info .user-name {
+  font-family: var(--grotesk); font-size: 13px; font-weight: 600; color: var(--text);
+}
+.pwa-drawer-user .user-info .user-email {
+  font-family: var(--mono); font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 1px;
+}
+.pwa-signout {
+  background: transparent; border: 0; color: var(--faint); font-family: var(--mono);
+  font-size: 10px; cursor: pointer; margin-top: 6px; text-transform: uppercase; letter-spacing: 1.2px;
+}
+.pwa-signout:hover { color: var(--red); }
+.pwa-signin-btn {
+  width: 100%; padding: 10px; border-radius: 9px;
+  background: var(--yellow); color: var(--text-inv); border: 0;
+  font-family: var(--grotesk); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.pwa-new-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 10px 14px; padding: 10px; border-radius: 9px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--grotesk); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.pwa-new-btn:hover { border-color: var(--yellow); }
+.pwa-drawer-section {
+  padding: 10px 16px 6px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  color: var(--faint); text-transform: uppercase; letter-spacing: 2px;
+}
+.pwa-chat-list {
+  list-style: none; margin: 0; padding: 0 8px; overflow-y: auto; flex: 1;
+}
+.pwa-chat-list li {
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  color: var(--dim); font-size: 13px; display: flex; flex-direction: column; gap: 2px;
+}
+.pwa-chat-list li:hover { background: var(--surface); }
+.pwa-chat-list li.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.pwa-chat-list li.active .pwa-chat-title { color: var(--yellow); }
+.pwa-chat-title {
+  font-family: var(--grotesk); font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pwa-chat-meta {
+  font-family: var(--mono); font-size: 9.5px; color: var(--faint);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.pwa-chat-empty {
+  color: var(--faint); font-size: 12px; padding: 16px; text-align: center; font-style: italic;
+}
+
 .pwa .install-banner { z-index: 100; }
 
 /* Standalone mode (fully installed, no browser chrome) */

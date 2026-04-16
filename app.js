@@ -615,6 +615,82 @@ themeBtn?.addEventListener('click', () => {
 });
 paintTheme();
 
+// --- PWA drawer ---
+(function setupPWADrawer() {
+  var drawer = document.getElementById('pwa-drawer');
+  var menuBtn = document.getElementById('pwa-menu');
+  var newBtn = document.getElementById('pwa-new');
+  var drawerNew = document.getElementById('pwa-drawer-new');
+  var signinBtn = document.getElementById('pwa-signin');
+  if (!drawer) return;
+
+  function openDrawer() {
+    drawer.hidden = false;
+    renderPWAChatList();
+    renderPWAUser();
+  }
+  function closeDrawer() { drawer.hidden = true; }
+
+  if (menuBtn) menuBtn.onclick = openDrawer;
+  if (newBtn) newBtn.onclick = function() { newConv(); };
+  if (drawerNew) drawerNew.onclick = function() { newConv(); closeDrawer(); };
+  if (signinBtn) signinBtn.onclick = function() { closeDrawer(); openSigninModal(); };
+
+  drawer.addEventListener('click', function(e) {
+    if (e.target.hasAttribute('data-pwa-close')) closeDrawer();
+  });
+
+  function renderPWAChatList() {
+    var list = document.getElementById('pwa-chat-list');
+    if (!list) return;
+    if (!convs.length) {
+      list.innerHTML = '<li class="pwa-chat-empty">No chats yet</li>';
+      return;
+    }
+    list.innerHTML = '';
+    for (var i = 0; i < convs.length; i++) {
+      var c = convs[i];
+      var li = document.createElement('li');
+      li.className = c.id === activeId ? 'active' : '';
+      li.setAttribute('data-cid', c.id);
+      var title = document.createElement('span');
+      title.className = 'pwa-chat-title';
+      title.textContent = c.title || 'New chat';
+      var meta = document.createElement('span');
+      meta.className = 'pwa-chat-meta';
+      meta.textContent = (c.mode || '') + ' / ' + (c.format || '') + ' / ' + fmtRel(c.updated);
+      li.appendChild(title);
+      li.appendChild(meta);
+      li.onclick = (function(id) {
+        return function() { selectConv(id); closeDrawer(); };
+      })(c.id);
+      list.appendChild(li);
+    }
+  }
+
+  function renderPWAUser() {
+    var container = document.getElementById('pwa-user');
+    if (!container) return;
+    fetch('/api/auth/me', { credentials: 'same-origin' }).then(function(r) { return r.json(); }).then(function(d) {
+      if (!d.user) {
+        container.innerHTML = '<button class="pwa-signin-btn" id="pwa-signin" type="button">Sign in</button>';
+        container.querySelector('#pwa-signin').onclick = function() { closeDrawer(); openSigninModal(); };
+        return;
+      }
+      container.innerHTML =
+        '<div class="user-info">' +
+          '<img src="' + (d.user.avatar || '') + '" alt="" />' +
+          '<div><div class="user-name">' + (d.user.name || d.user.login || '') + '</div>' +
+          '<div class="user-email">' + (d.user.email || '') + '</div></div>' +
+        '</div>' +
+        '<button class="pwa-signout" type="button">Sign out</button>';
+      container.querySelector('.pwa-signout').onclick = function() {
+        fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).then(function() { location.reload(); });
+      };
+    }).catch(function() {});
+  }
+})();
+
 // --- Init ---
 renderSidebar();
 renderChat();
