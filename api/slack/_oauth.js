@@ -1,30 +1,25 @@
 // GET /api/slack/oauth - Slack OAuth callback after workspace install
-import { recordEvent, recordUser } from '../_store.js';
+import { recordEvent } from '../_store.js';
+
+const HOME = process.env.AUTH_BASE_URL || 'https://www.corporatefilter.ai';
+
+function redirect(res, path) {
+  res.statusCode = 302;
+  res.setHeader('Location', HOME + path);
+  res.end();
+}
 
 export default async function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const code = url.searchParams.get('code');
   const error = url.searchParams.get('error');
 
-  if (error) {
-    res.statusCode = 302;
-    res.setHeader('Location', '/?slack_error=' + encodeURIComponent(error));
-    return res.end();
-  }
-
-  if (!code) {
-    res.statusCode = 302;
-    res.setHeader('Location', '/?slack_error=no_code');
-    return res.end();
-  }
+  if (error) return redirect(res, '/?slack_error=' + encodeURIComponent(error));
+  if (!code) return redirect(res, '/?slack_error=no_code');
 
   const clientId = process.env.SLACK_CLIENT_ID;
   const clientSecret = process.env.SLACK_CLIENT_SECRET;
-  if (!clientId || !clientSecret) {
-    res.statusCode = 302;
-    res.setHeader('Location', '/?slack_error=not_configured');
-    return res.end();
-  }
+  if (!clientId || !clientSecret) return redirect(res, '/?slack_error=not_configured');
 
   try {
     const r = await fetch('https://slack.com/api/oauth.v2.access', {
@@ -34,13 +29,8 @@ export default async function handler(req, res) {
     });
     const data = await r.json();
 
-    if (!data.ok) {
-      res.statusCode = 302;
-      res.setHeader('Location', '/?slack_error=' + encodeURIComponent(data.error || 'exchange_failed'));
-      return res.end();
-    }
+    if (!data.ok) return redirect(res, '/?slack_error=' + encodeURIComponent(data.error || 'exchange_failed'));
 
-    // Record the install
     try {
       await recordEvent('slack_install', {
         team_id: data.team?.id,
@@ -50,13 +40,8 @@ export default async function handler(req, res) {
       }, { id: 'slack:' + (data.team?.id || 'unknown'), email: (data.team?.name || '') + '@slack' });
     } catch {}
 
-    // Redirect to success page
-    res.statusCode = 302;
-    res.setHeader('Location', '/?slack_installed=' + encodeURIComponent(data.team?.name || 'your workspace'));
-    res.end();
+    redirect(res, '/?slack_installed=' + encodeURIComponent(data.team?.name || 'your workspace'));
   } catch (err) {
-    res.statusCode = 302;
-    res.setHeader('Location', '/?slack_error=' + encodeURIComponent(err.message));
-    res.end();
+    redirect(res, '/?slack_error=' + encodeURIComponent(err.message));
   }
 }
