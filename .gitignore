@@ -6,3 +6,7 @@ node_modules/
 .DS_Store
 extension.zip
 .data/
+extension.crx
+extension.pem
+*.pem
+*.crx
