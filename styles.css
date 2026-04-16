@@ -539,18 +539,17 @@ h2 { font-family: var(--grotesk); font-size: clamp(28px, 3.5vw, 40px); letter-sp
 
 /* ==================== PWA INSTALL BANNER ==================== */
 .install-banner {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
-  padding: 0 12px env(safe-area-inset-bottom, 12px) 12px;
-  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.85) 20%);
+  position: fixed; bottom: 16px; left: 16px; z-index: 90;
+  padding: 0;
   animation: ib-slide .3s ease;
 }
 .install-banner[hidden] { display: none; }
-@keyframes ib-slide { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
+@keyframes ib-slide { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
 .ib-inner {
-  max-width: 480px; margin: 0 auto;
-  background: var(--card, #1a1a1a); border: 1px solid var(--border, #2a2a2a); border-radius: 16px;
-  padding: 14px 16px; display: flex; align-items: center; gap: 12px;
-  box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
+  max-width: 360px;
+  background: var(--card, #1a1a1a); border: 1px solid var(--border, #2a2a2a); border-radius: 14px;
+  padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,204,0,0.06);
 }
 .ib-icon img { border-radius: 12px; display: block; }
 .ib-text { flex: 1; min-width: 0; }
