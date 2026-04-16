@@ -393,8 +393,20 @@ body {
 .bubble { max-width: 760px; padding: 14px 16px; border-radius: 12px; font-size: 15px; font-family: var(--grotesk); font-weight: 500; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; position: relative; }
 .bubble.user { align-self: flex-end; background: var(--yellow); color: var(--text-inv); border: 1px solid var(--yellow); }
 .bubble.assistant { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-.bubble.assistant.thinking { color: var(--faint); font-style: italic; }
-.bubble.assistant.thinking::after { content: ''; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--yellow); animation: dot-blink 1.5s ease-in-out infinite; vertical-align: middle; }
+.bubble.assistant.thinking { color: var(--faint); }
+.bubble.assistant.thinking .body {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--grotesk); font-size: 13px; font-weight: 500;
+}
+.bubble.assistant.thinking .body::after {
+  content: ''; display: inline-block;
+  width: 24px; height: 24px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--yellow);
+  border-radius: 50%;
+  animation: cf-spin .6s linear infinite;
+}
+@keyframes cf-spin { to { transform: rotate(360deg); } }
 .bubble .role { display: block; font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
 .bubble.user .role { color: rgba(0,0,0,0.55); }
 .bubble .shot { display: block; max-width: 320px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); }

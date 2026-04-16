@@ -105,65 +105,105 @@ function renderSidebar() {
 }
 
 function renderChat() {
-  const c = active();
-  const empty = $('#empty');
-  const msgs = $('#messages');
-  const del = $('#delete-chat');
+  try {
+    var c = active();
+    var msgs = document.getElementById('messages');
+    var empty = document.getElementById('empty');
+    var del = document.getElementById('delete-chat');
+    if (!msgs) return;
 
-  if (!c) {
-    // No active conversation - show empty state, hide delete.
+    if (!c) {
+      msgs.innerHTML = '';
+      if (empty) { msgs.appendChild(empty); empty.hidden = false; }
+      if (del) del.hidden = true;
+      setMode('translate');
+      try { formatDD.setValue('slack'); } catch {}
+      try { toneDD.setValue('balanced'); } catch {}
+      return;
+    }
+
+    if (del) del.hidden = false;
+    setMode(c.mode);
+    try { formatDD.setValue(c.format); } catch {}
+    try { toneDD.setValue(c.tone); } catch {}
+
+    if (!c.messages || !c.messages.length) {
+      msgs.innerHTML = '';
+      if (empty) { msgs.appendChild(empty); empty.hidden = false; }
+      return;
+    }
+
+    if (empty) empty.hidden = true;
     msgs.innerHTML = '';
-    msgs.appendChild(empty);
-    empty.hidden = false;
-    del.hidden = true;
-    setMode('translate');
-    formatDD.setValue('slack');
-    toneDD.setValue('balanced');
-    return;
+    for (var i = 0; i < c.messages.length; i++) {
+      try { msgs.appendChild(makeBubble(c.messages[i])); } catch {}
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch (e) {
+    // Visible error so we can debug
+    var msgs2 = document.getElementById('messages');
+    if (msgs2) {
+      var errDiv = document.createElement('div');
+      errDiv.style.cssText = 'color:red;padding:10px;font-size:12px;';
+      errDiv.textContent = 'renderChat error: ' + e.message;
+      msgs2.appendChild(errDiv);
+    }
   }
-
-  del.hidden = false;
-  setMode(c.mode);
-  formatDD.setValue(c.format);
-  toneDD.setValue(c.tone);
-
-  if (!c.messages.length) {
-    msgs.innerHTML = '';
-    msgs.appendChild(empty);
-    empty.hidden = false;
-    return;
-  }
-
-  empty.hidden = true;
-  msgs.innerHTML = '';
-  for (const m of c.messages) msgs.appendChild(bubble(m));
-  msgs.scrollTop = msgs.scrollHeight;
 }
 
-function bubble(m) {
-  const el = document.createElement('div');
-  el.className = `bubble ${m.role}`;
+function makeBubble(m) {
+  var el = document.createElement('div');
+  el.className = 'bubble ' + (m.role || 'user');
   if (m.thinking) el.classList.add('thinking');
-  const label = m.role === 'user' ? 'You' : 'corporatefilter.ai';
-  const shot = m.screenshot ? `<img class="shot" src="${m.screenshot}" alt="attachment" />` : '';
-  const body = m.thinking ? 'Thinking…' : escapeHtml(m.content);
-  const actions = m.role === 'assistant' && !m.thinking
-    ? `<div class="bubble-actions">
-         <button data-a="copy">Copy</button>
-         <button data-a="regen">Regenerate</button>
-       </div>` : '';
-  el.innerHTML = `<span class="role">${label}</span>${shot}<div class="body">${body}</div>${actions}`;
-  if (m.role === 'assistant' && !m.thinking) {
-    el.querySelector('[data-a="copy"]').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(m.content); flash(el, 'Copied ✓'); } catch {}
-    });
-    el.querySelector('[data-a="regen"]').addEventListener('click', () => regenerate(m));
+
+  var role = document.createElement('span');
+  role.className = 'role';
+  role.textContent = m.role === 'user' ? 'You' : 'corporatefilter.ai';
+  el.appendChild(role);
+
+  if (m.screenshot) {
+    var img = document.createElement('img');
+    img.className = 'shot';
+    img.src = m.screenshot;
+    el.appendChild(img);
   }
+
+  var body = document.createElement('div');
+  body.className = 'body';
+  body.textContent = m.thinking ? 'Rewriting' : (m.content || '');
+  el.appendChild(body);
+
+  if (m.role === 'assistant' && !m.thinking && m.content) {
+    var actions = document.createElement('div');
+    actions.className = 'bubble-actions';
+
+    var copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy';
+    copyBtn.setAttribute('data-a', 'copy');
+    copyBtn.onclick = function() {
+      navigator.clipboard.writeText(m.content || '').then(function() {
+        copyBtn.textContent = 'Copied';
+        setTimeout(function() { copyBtn.textContent = 'Copy'; }, 1100);
+      }).catch(function() {});
+    };
+
+    var regenBtn = document.createElement('button');
+    regenBtn.textContent = 'Regenerate';
+    regenBtn.setAttribute('data-a', 'regen');
+    regenBtn.onclick = function() { regenerate(m); };
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(regenBtn);
+    el.appendChild(actions);
+  }
+
   return el;
 }
 
 function flash(el, text) {
-  const prev = el.querySelector('[data-a="copy"]').textContent;
+  var btn = el.querySelector('[data-a="copy"]');
+  if (!btn) return;
+  var prev = btn.textContent;
   el.querySelector('[data-a="copy"]').textContent = text;
   setTimeout(() => (el.querySelector('[data-a="copy"]').textContent = prev), 1100);
 }
@@ -385,82 +425,37 @@ async function regenerate(assistantMsg) {
 }
 
 async function stream(c, pending, screenshot) {
-  const msgs = c.messages
-    .filter((m) => m !== pending && !m.thinking)
-    .map((m) => ({ role: m.role, content: m.content }));
-  const reqBody = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs };
+  var msgs = c.messages
+    .filter(function(m) { return m !== pending && !m.thinking; })
+    .map(function(m) { return { role: m.role, content: m.content }; });
+  var reqBody = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs };
   if (screenshot) reqBody.screenshot = screenshot;
 
-  // Use streaming if browser supports ReadableStream on fetch response
-  const canStream = typeof ReadableStream !== 'undefined';
-  if (canStream) reqBody.stream = true;
-
   try {
-    const res = await fetch('/api/chat', {
+    var res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(reqBody),
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Request failed (${res.status})`);
+      var errData = await res.json().catch(function() { return {}; });
+      throw new Error(errData.error || 'Request failed (' + res.status + ')');
     }
 
-    if (canStream && res.headers.get('content-type')?.includes('text/event-stream')) {
-      // SSE streaming: show text word-by-word
-      pending.thinking = false;
-      pending.content = '';
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-      const msgEl = $('#messages');
-      let bubbleBody = null;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const evt = JSON.parse(line.slice(6));
-            if (evt.type === 'delta' && evt.text) {
-              pending.content += evt.text;
-              if (!bubbleBody) {
-                renderChat();
-                const bubbles = msgEl.querySelectorAll('.bubble.assistant');
-                bubbleBody = bubbles[bubbles.length - 1]?.querySelector('.body');
-              }
-              if (bubbleBody) {
-                bubbleBody.textContent = pending.content;
-                msgEl.scrollTop = msgEl.scrollHeight;
-              }
-            }
-            if (evt.type === 'done') {
-              pending.content = evt.output || pending.content || '(empty)';
-            }
-            if (evt.type === 'error') {
-              throw new Error(evt.error);
-            }
-          } catch (e) {
-            if (e.message && !e.message.includes('JSON')) throw e;
-          }
-        }
-      }
-    } else {
-      // Fallback: non-streaming JSON response
-      const data = await res.json();
-      pending.content = data.output || '(empty)';
-      pending.thinking = false;
-    }
+    var data = await res.json();
+    pending.content = data.output || '(empty)';
+    pending.thinking = false;
   } catch (err) {
-    pending.content = pending.content || `Error: ${err.message}`;
+    pending.content = 'Error: ' + err.message;
     pending.thinking = false;
   }
-  c.updated = now(); save(); renderChat(); renderSidebar();
+
+  try { c.updated = now(); save(); } catch (e) {}
+
+  // Update the DOM
+  renderChat();
+  try { renderSidebar(); } catch (e) {}
 }
 
 // Handle ?auth_error=... from a failed OAuth redirect
