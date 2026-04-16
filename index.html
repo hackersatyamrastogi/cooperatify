@@ -194,20 +194,19 @@
 
         <footer class="composer" id="composer">
           <div class="composer-inner" id="drop">
-            <textarea id="input" rows="1" placeholder="What you really want to say..."></textarea>
-            <div class="composer-row">
-              <span class="drop-hint" id="drop-label" hidden>Drop screenshot, paste, or browse</span>
-              <div class="composer-actions">
+            <div class="composer-main">
+              <textarea id="input" rows="1" placeholder="What you really want to say..."></textarea>
+              <div class="composer-btns">
                 <button class="icon-btn" id="mic" type="button" title="Voice input">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
                 </button>
-                <button class="btn-primary" id="send" type="button" title="Send">
-                  <span id="send-label">Send</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                <button class="send-btn" id="send" type="button" title="Send">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                 </button>
               </div>
             </div>
-            <div class="thumb" id="thumb" hidden><img id="thumb-img" alt="" /><button class="thumb-x" id="thumb-x" type="button" title="Remove">×</button></div>
+            <span class="drop-hint" id="drop-label" hidden>Drop screenshot, paste, or browse</span>
+            <div class="thumb" id="thumb" hidden><img id="thumb-img" alt="" /><button class="thumb-x" id="thumb-x" type="button" title="Remove">x</button></div>
           </div>
         </footer>
       </section>

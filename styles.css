@@ -417,17 +417,28 @@ body {
 .chip:hover { border-color: var(--yellow); color: var(--text); }
 
 /* Composer */
-.composer { padding: 14px 22px 20px; border-top: 1px solid var(--border); background: var(--bg); }
-.composer-inner { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; transition: border-color .15s; }
-.composer-inner:focus-within { border-color: var(--yellow); }
-.composer-inner.drag { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(255,204,0,0.18); }
-.composer textarea { width: 100%; background: transparent; color: var(--text); border: 0; outline: 0; resize: none; font-family: var(--grotesk); font-size: 16px; font-weight: 500; line-height: 1.6; min-height: 26px; max-height: 220px; }
+.composer { padding: 12px 22px 18px; border-top: 1px solid var(--border); background: var(--bg); }
+.composer-inner { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 6px 6px 6px 14px; transition: border-color .15s, box-shadow .15s; }
+.composer-inner:focus-within { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(255,204,0,0.1); }
+.composer-inner.drag { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(255,204,0,0.18); }
+.composer-main { display: flex; align-items: flex-end; gap: 6px; }
+.composer textarea { flex: 1; background: transparent; color: var(--text); border: 0; outline: 0; resize: none; font-family: var(--grotesk); font-size: 15px; font-weight: 500; line-height: 1.55; min-height: 24px; max-height: 180px; padding: 8px 0; }
 .composer textarea::placeholder { color: var(--faint); }
-.composer-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); }
-.drop-hint { color: var(--faint); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; margin-right: auto; }
+.composer-btns { display: flex; align-items: center; gap: 4px; flex-shrink: 0; padding-bottom: 2px; }
+.drop-hint { display: block; color: var(--faint); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 8px 2px; }
 .kbd-hint { font-family: var(--mono); font-size: 10px; color: var(--faint); display: inline-flex; align-items: center; gap: 4px; }
 kbd { padding: 1px 5px; border: 1px solid var(--faint); border-radius: 3px; font-family: var(--mono); font-size: 9.5px; color: var(--dim); }
-.composer-actions { display: inline-flex; gap: 8px; margin-left: auto; }
+
+/* Send button (yellow circle) */
+.send-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--yellow); color: var(--text-inv); border: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: transform .1s, filter .1s;
+}
+.send-btn:hover { filter: brightness(1.08); transform: scale(1.06); }
+.send-btn:active { transform: scale(0.95); }
 
 /* Integration links (sidebar footer) */
 .slack-add, .chrome-add {
@@ -658,13 +669,12 @@ h2 { font-family: var(--grotesk); font-size: clamp(28px, 3.5vw, 40px); letter-sp
   .chips { gap: 6px; }
   .chip { font-size: 11.5px; padding: 6px 10px; }
 
-  .composer { padding: 10px 12px 14px; }
-  .composer-inner { padding: 10px; }
+  .composer { padding: 8px 10px 12px; }
+  .composer-inner { padding: 4px 4px 4px 10px; }
   .composer textarea { font-size: 14px; }
-  .composer-row { flex-wrap: wrap; gap: 6px; margin-top: 6px; padding-top: 8px; }
   .hide-mobile { display: none !important; }
-  .slack-add { font-size: 10.5px; padding: 4px 8px; }
   .icon-btn { width: 30px; height: 30px; }
+  .send-btn { width: 34px; height: 34px; }
 
   .thumb img { max-height: 56px; }
 

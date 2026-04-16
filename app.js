@@ -353,23 +353,25 @@ async function send() {
   if (!text && !pendingScreenshot) return;
   sending = true;
 
-  const c = ensureConv();
-  const userMsg = { role: 'user', content: text || '(see attached screenshot)', ts: now() };
-  if (pendingScreenshot) userMsg.screenshot = pendingScreenshot;
-  c.messages.push(userMsg);
+  try {
+    const c = ensureConv();
+    const userMsg = { role: 'user', content: text || '(see attached screenshot)', ts: now() };
+    if (pendingScreenshot) userMsg.screenshot = pendingScreenshot;
+    c.messages.push(userMsg);
 
-  if (c.messages.length === 1) c.title = text.slice(0, 48) || 'Screenshot chat';
+    if (c.messages.length === 1) c.title = text.slice(0, 48) || 'Screenshot chat';
 
-  // Placeholder assistant bubble
-  const pending = { role: 'assistant', content: '', ts: now(), thinking: true };
-  c.messages.push(pending);
+    const pending = { role: 'assistant', content: '', ts: now(), thinking: true };
+    c.messages.push(pending);
 
-  const screenshotToSend = pendingScreenshot;
-  input.value = ''; autoGrow(input); pendingScreenshot = null; $('#thumb').hidden = true;
-  c.updated = now(); save(); renderChat(); renderSidebar();
+    const screenshotToSend = pendingScreenshot;
+    input.value = ''; autoGrow(input); pendingScreenshot = null; $('#thumb').hidden = true;
+    c.updated = now(); save(); renderChat(); renderSidebar();
 
-  await stream(c, pending, screenshotToSend);
-  sending = false;
+    await stream(c, pending, screenshotToSend);
+  } finally {
+    sending = false;
+  }
 }
 
 async function regenerate(assistantMsg) {
@@ -387,63 +389,73 @@ async function stream(c, pending, screenshot) {
   const msgs = c.messages
     .filter((m) => m !== pending && !m.thinking)
     .map((m) => ({ role: m.role, content: m.content }));
-  const body = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs, stream: true };
-  if (screenshot) body.screenshot = screenshot;
+  const reqBody = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs };
+  if (screenshot) reqBody.screenshot = screenshot;
+
+  // Use streaming if browser supports ReadableStream on fetch response
+  const canStream = typeof ReadableStream !== 'undefined';
+  if (canStream) reqBody.stream = true;
 
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(reqBody),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Request failed');
+      throw new Error(err.error || `Request failed (${res.status})`);
     }
 
-    // Read SSE stream, update bubble in real-time
-    pending.thinking = false;
-    pending.content = '';
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-    const msgEl = $('#messages');
-    let bubbleBody = null;
+    if (canStream && res.headers.get('content-type')?.includes('text/event-stream')) {
+      // SSE streaming: show text word-by-word
+      pending.thinking = false;
+      pending.content = '';
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      const msgEl = $('#messages');
+      let bubbleBody = null;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const evt = JSON.parse(line.slice(6));
-          if (evt.type === 'delta' && evt.text) {
-            pending.content += evt.text;
-            if (!bubbleBody) {
-              renderChat();
-              const bubbles = msgEl.querySelectorAll('.bubble.assistant');
-              const last = bubbles[bubbles.length - 1];
-              bubbleBody = last?.querySelector('.body');
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.type === 'delta' && evt.text) {
+              pending.content += evt.text;
+              if (!bubbleBody) {
+                renderChat();
+                const bubbles = msgEl.querySelectorAll('.bubble.assistant');
+                bubbleBody = bubbles[bubbles.length - 1]?.querySelector('.body');
+              }
+              if (bubbleBody) {
+                bubbleBody.textContent = pending.content;
+                msgEl.scrollTop = msgEl.scrollHeight;
+              }
             }
-            if (bubbleBody) {
-              bubbleBody.textContent = pending.content;
-              msgEl.scrollTop = msgEl.scrollHeight;
+            if (evt.type === 'done') {
+              pending.content = evt.output || pending.content || '(empty)';
             }
+            if (evt.type === 'error') {
+              throw new Error(evt.error);
+            }
+          } catch (e) {
+            if (e.message && !e.message.includes('JSON')) throw e;
           }
-          if (evt.type === 'done') {
-            pending.content = evt.output || pending.content || '(empty)';
-          }
-          if (evt.type === 'error') {
-            throw new Error(evt.error);
-          }
-        } catch (e) {
-          if (e.message && !e.message.includes('JSON')) throw e;
         }
       }
+    } else {
+      // Fallback: non-streaming JSON response
+      const data = await res.json();
+      pending.content = data.output || '(empty)';
+      pending.thinking = false;
     }
   } catch (err) {
     pending.content = pending.content || `Error: ${err.message}`;
