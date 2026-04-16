@@ -175,8 +175,41 @@ function setMode(mode) {
 
 // --- Event wiring ---
 $('#new-chat').addEventListener('click', newConv);
-$('#delete-chat').addEventListener('click', () => {
-  if (activeId && confirm('Delete this conversation?')) deleteConv(activeId);
+function confirmDialog({ title, body, okLabel = 'Delete', okClass = 'btn-danger' }) {
+  return new Promise((resolve) => {
+    const m = $('#confirm-modal');
+    $('#confirm-title').textContent = title;
+    $('#confirm-body').textContent = body;
+    const ok = $('#confirm-ok');
+    ok.textContent = okLabel;
+    ok.className = okClass;
+    m.hidden = false;
+    setTimeout(() => ok.focus(), 50);
+    const cleanup = (result) => {
+      m.hidden = true;
+      ok.removeEventListener('click', onOk);
+      m.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onBackdrop = (e) => { if (e.target.matches('[data-close]')) cleanup(false); };
+    const onKey = (e) => { if (e.key === 'Escape') cleanup(false); if (e.key === 'Enter') cleanup(true); };
+    ok.addEventListener('click', onOk);
+    m.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+$('#delete-chat').addEventListener('click', async () => {
+  if (!activeId) return;
+  const c = active();
+  const ok = await confirmDialog({
+    title: 'Delete this chat?',
+    body: `"${c?.title || 'Untitled'}" and all its messages will be removed from this browser. This can't be undone.`,
+    okLabel: 'Delete chat',
+  });
+  if (ok) deleteConv(activeId);
 });
 $('#search').addEventListener('input', renderSidebar);
 
@@ -224,6 +257,10 @@ function setupDropdown(wrapId, onChange) {
     label.textContent = opt.querySelector('.dp-opt-title').textContent;
     options.forEach((o) => o.classList.toggle('active', o === opt));
     wrap.dataset.value = v;
+    // Sync the trigger icon with the active option (for dropdowns that have .dp-icon-slot)
+    const slot = trigger.querySelector('.dp-icon-slot');
+    const src = opt.querySelector('.dp-opt-icon, .dp-opt-emoji');
+    if (slot && src) slot.innerHTML = src.innerHTML;
   }
   return { setValue, get value() { return wrap.dataset.value; } };
 }
@@ -359,13 +396,100 @@ async function stream(c, pending, screenshot) {
   c.updated = now(); save(); renderChat(); renderSidebar();
 }
 
+// Handle ?auth_error=... from a failed OAuth redirect
+(function handleAuthError() {
+  const p = new URLSearchParams(location.search);
+  const err = p.get('auth_error');
+  if (!err) return;
+  const msgs = {
+    github_not_configured: 'GitHub sign-in isn\'t configured yet. Use email sign-in below, or set GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET in .env.local.',
+    github_state_invalid: 'Sign-in state mismatch — please try again.',
+    github_exchange_failed: 'GitHub rejected the sign-in. Check the OAuth app callback URL matches /api/auth/callback.',
+    google_not_configured: 'Google sign-in isn\'t configured yet. Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in .env.local.',
+    google_state_invalid: 'Google sign-in state mismatch — please try again.',
+    google_exchange_failed: 'Google rejected the sign-in. Check the OAuth client redirect URI matches /api/auth/google-callback.',
+    google_id_token_invalid: 'Couldn\'t decode Google ID token.',
+    google_audience_mismatch: 'Google ID token audience mismatch.',
+    google_email_unverified: 'Your Google email isn\'t verified.',
+  };
+  sessionStorage.setItem('coop:authError', msgs[err] || `Sign-in failed (${err}).`);
+  // Clean the URL
+  history.replaceState({}, '', location.pathname);
+  // Open modal on next tick
+  setTimeout(() => openSigninModal(), 100);
+})();
+
 // --- Auth ---
+async function openSigninModal() {
+  const m = $('#signin-modal'); if (!m) return;
+  m.hidden = false;
+
+  // Surface any pending auth error as a banner inside the modal
+  const errBanner = m.querySelector('#modal-banner');
+  const pending = sessionStorage.getItem('coop:authError');
+  if (pending && errBanner) {
+    errBanner.textContent = pending;
+    errBanner.hidden = false;
+    sessionStorage.removeItem('coop:authError');
+  } else if (errBanner) {
+    errBanner.hidden = true;
+    errBanner.textContent = '';
+  }
+
+  try {
+    const r = await fetch('/api/auth/config');
+    const { providers } = await r.json();
+    const gh = m.querySelector('.provider-btn.github');
+    const gg = m.querySelector('.provider-btn.google');
+    const devForm = m.querySelector('#dev-form');
+    const divider = m.querySelector('.divider');
+    if (gh) gh.style.display = providers.github ? 'flex' : 'none';
+    if (gg) gg.style.display = providers.google ? 'flex' : 'none';
+    if (devForm) devForm.style.display = providers.dev ? 'flex' : 'none';
+    const hasOAuth = providers.github || providers.google;
+    if (divider) divider.style.display = hasOAuth && providers.dev ? 'flex' : 'none';
+    if (!hasOAuth && !providers.dev) {
+      m.querySelector('.modal-sub').innerHTML = '<span style="color:var(--red)">No sign-in provider is configured.</span> Set <code>GITHUB_CLIENT_*</code>, <code>GOOGLE_CLIENT_*</code>, or <code>COOP_DEV_LOGIN=1</code> in <code>.env.local</code>.';
+    }
+  } catch {}
+  setTimeout(() => m.querySelector('input:not([type=hidden])')?.focus(), 50);
+}
+function closeSigninModal() { const m = $('#signin-modal'); if (m) m.hidden = true; }
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#signin-btn')) { e.preventDefault(); openSigninModal(); return; }
+  if (e.target.matches('[data-close]')) closeSigninModal();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSigninModal(); });
+
+$('#dev-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = $('#dev-email').value.trim();
+  const name = $('#dev-name').value.trim();
+  const err = $('#dev-err');
+  err.hidden = true;
+  try {
+    const r = await fetch('/api/auth/dev', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ email, name }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Sign-in failed');
+    location.reload();
+  } catch (e2) {
+    err.textContent = e2.message;
+    err.hidden = false;
+  }
+});
+
 async function renderAuth() {
   try {
     const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
     const { user } = await r.json();
     const slot = $('#auth-slot');
     if (!user) return; // keep Sign in button
+    const isGH = user.provider === 'github';
     slot.innerHTML = `
       <button class="user-chip" id="user-chip" type="button" aria-expanded="false">
         <img src="${user.avatar || ''}" alt="" />
@@ -376,9 +500,14 @@ async function renderAuth() {
           <div class="um-name">${user.name || user.login}</div>
           <div class="um-sub">${user.email || '@' + user.login}</div>
         </div>
-        <a href="https://github.com/${user.login}" target="_blank" rel="noreferrer">View GitHub profile</a>
+        <a href="/admin" id="admin-link" hidden>Admin dashboard</a>
+        ${isGH ? `<a href="https://github.com/${user.login}" target="_blank" rel="noreferrer">View GitHub profile</a>` : ''}
         <button id="signout-btn" type="button">Sign out</button>
       </div>`;
+    // Reveal admin link only if server confirms admin (HEAD returns 200 for admins)
+    fetch('/api/admin/stats', { method: 'HEAD', credentials: 'same-origin' })
+      .then((r) => { if (r.ok) $('#admin-link').hidden = false; })
+      .catch(() => {});
     $('#user-chip').addEventListener('click', (e) => {
       e.stopPropagation();
       const m = $('#user-menu'); m.hidden = !m.hidden;

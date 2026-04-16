@@ -1,5 +1,7 @@
 // Vercel Serverless — POST /api/chat
 // Multi-turn conversation. Body: { mode, format, tone, messages:[{role,content}], screenshot? }
+import { currentUser } from './_session.js';
+import { recordEvent } from './_store.js';
 
 const FORMATS = {
   slack: 'Slack message: short, direct, no subject line, plain prose, emoji OK if they help.',
@@ -86,6 +88,15 @@ export default async function handler(req, res) {
       .join('\n')
       .trim();
     const usage = data.usage || null;
+    try {
+      await recordEvent('chat', {
+        mode, format, tone,
+        turns: mapped.length,
+        hasScreenshot: Boolean(screenshot),
+        inputTokens: usage?.input_tokens || 0,
+        outputTokens: usage?.output_tokens || 0,
+      }, currentUser(req));
+    } catch {}
     res.status(200).json({ output, usage });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Server error' });

@@ -65,16 +65,24 @@ const server = http.createServer(async (req, res) => {
 
   let filePath = path.join(__dirname, url.pathname === '/' ? 'index.html' : url.pathname);
   if (!filePath.startsWith(__dirname)) return res.writeHead(403).end('forbidden');
-  try {
-    const data = await readFile(filePath);
-    res.writeHead(200, { 'content-type': MIME[path.extname(filePath)] || 'application/octet-stream' });
-    res.end(data);
-  } catch {
-    res.writeHead(404).end('not found');
+  const candidates = [filePath];
+  if (!path.extname(filePath)) candidates.push(filePath + '.html'); // matches Vercel cleanUrls
+  for (const p of candidates) {
+    try {
+      const data = await readFile(p);
+      res.writeHead(200, { 'content-type': MIME[path.extname(p)] || 'application/octet-stream' });
+      return res.end(data);
+    } catch {}
   }
+  res.writeHead(404).end('not found');
 });
 
 server.listen(PORT, () => {
   const hasKey = !!process.env.ANTHROPIC_API_KEY;
   console.log(`corporatefilter.ai dev → http://localhost:${PORT}  (ANTHROPIC_API_KEY: ${hasKey ? 'ok' : 'MISSING'})`);
 });
+
+// Kick off Slack Socket Mode if the app-level token is set
+if (process.env.SLACK_APP_TOKEN) {
+  import('./slack-socket.mjs').then((m) => m.start()).catch((e) => console.error('[slack] init failed', e));
+}

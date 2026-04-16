@@ -1,8 +1,11 @@
 // POST /api/auth/logout — clears the session cookie
-import { clearCookie } from '../_session.js';
+import { clearCookie, currentUser } from '../_session.js';
+import { recordEvent } from '../_store.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
+  const u = currentUser(req);
   clearCookie(res);
+  try { if (u) await recordEvent('logout', {}, u); } catch {}
   if (req.method === 'GET') {
     res.statusCode = 302;
     res.setHeader('Location', '/');

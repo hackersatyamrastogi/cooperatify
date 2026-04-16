@@ -32,10 +32,10 @@
           <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
         <div class="auth-slot" id="auth-slot">
-          <a class="btn-ghost" href="/api/auth/login" id="signin-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.4.5 0 5.9 0 12.5c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2 1-.3 2-.4 3-.4s2 .1 3 .4C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.7.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 24 12.5C24 5.9 18.6.5 12 .5z"/></svg>
+          <button class="btn-ghost" id="signin-btn" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
             Sign in
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -79,21 +79,49 @@
           <div class="chat-controls">
             <div class="dp-wrap" id="dp-format" data-field="format">
               <button class="dp-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
-                <svg class="dp-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zM4 10h10v4H4zM4 16h16v4H4z"/></svg>
+                <span class="dp-icon-slot"></span>
                 <span class="dp-label">Slack</span>
                 <svg class="dp-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               <div class="dp-menu" role="listbox" data-side="below" data-align="right">
                 <button class="dp-option" role="option" data-value="slack" type="button">
-                  <div class="dp-option-row"><span class="dp-opt-emoji">💬</span><span class="dp-opt-title">Slack</span></div>
+                  <div class="dp-option-row">
+                    <span class="dp-opt-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#E01E5A" d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z"/>
+                        <path fill="#36C5F0" d="M8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z"/>
+                        <path fill="#2EB67D" d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312z"/>
+                        <path fill="#ECB22E" d="M15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                      </svg>
+                    </span>
+                    <span class="dp-opt-title">Slack</span>
+                  </div>
                   <span class="dp-opt-desc">Short, direct, no subject line</span>
                 </button>
                 <button class="dp-option" role="option" data-value="email" type="button">
-                  <div class="dp-option-row"><span class="dp-opt-emoji">✉️</span><span class="dp-opt-title">Email</span></div>
+                  <div class="dp-option-row">
+                    <span class="dp-opt-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#4285F4" d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+                        <path fill="#34A853" d="M1.636 21.002h3.819V11.73L0 7.73v11.636c0 .904.732 1.636 1.636 1.636z"/>
+                        <path fill="#FFBA00" d="M18.545 21.002h3.819c.904 0 1.636-.732 1.636-1.636V7.73l-5.455 4v9.272z"/>
+                        <path fill="#E94235" d="M18.545 4.64v7.09L24 7.73V5.456c0-2.106-2.404-3.291-4.09-2.023l-1.365 1.207z"/>
+                        <path fill="#C52233" d="M5.455 11.73V4.64L12 9.548l6.545-4.91v7.09L12 16.64z"/>
+                      </svg>
+                    </span>
+                    <span class="dp-opt-title">Email</span>
+                  </div>
                   <span class="dp-opt-desc">Subject, greeting, sign-off</span>
                 </button>
                 <button class="dp-option" role="option" data-value="linkedin" type="button">
-                  <div class="dp-option-row"><span class="dp-opt-emoji">💼</span><span class="dp-opt-title">LinkedIn</span></div>
+                  <div class="dp-option-row">
+                    <span class="dp-opt-icon">
+                      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#0A66C2" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.063 2.063 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </span>
+                    <span class="dp-opt-title">LinkedIn</span>
+                  </div>
                   <span class="dp-opt-desc">Professional, slightly warm</span>
                 </button>
               </div>
@@ -169,6 +197,7 @@
     <section id="how" class="how">
       <div class="wrap">
         <h2>How it works</h2>
+        <p class="section-lede">Three steps from unfiltered thought to something you can actually send.</p>
         <div class="steps">
           <div class="step">
             <span class="step-num">01</span>
@@ -192,6 +221,7 @@
     <section id="features" class="features">
       <div class="wrap">
         <h2>Everything you need</h2>
+        <p class="section-lede">A small set of features, dialed in so the output is always send-ready.</p>
         <div class="feature-grid">
           <div class="feature"><div class="f-ico">🔄</div><h3>Translate &amp; Reply</h3><p>Translate rewrites your own words. Reply reads a message or screenshot and crafts a calm, professional response.</p></div>
           <div class="feature"><div class="f-ico">🎛️</div><h3>Tone Control</h3><p>Gentle, Balanced, or Spicy. Pick how direct you want to be — the AI adjusts word choice to sign-off.</p></div>
@@ -213,6 +243,59 @@
       </div>
     </section>
   </main>
+
+  <div class="modal" id="confirm-modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card modal-sm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h2 id="confirm-title" class="modal-title" style="text-align:left">Delete this chat?</h2>
+      <p class="modal-sub" id="confirm-body" style="text-align:left; margin-bottom: 18px;">This can't be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" data-close type="button">Cancel</button>
+        <button class="btn-danger" id="confirm-ok" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="signin-modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="signin-title">
+      <button class="modal-x" data-close type="button" aria-label="Close">×</button>
+      <div class="modal-brand-row">
+        <span class="dot"></span><span class="dot"></span><span class="dot big"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+      <h2 id="signin-title" class="modal-title">Sign in to <span class="yellow">corporatefilter.ai</span></h2>
+      <p class="modal-sub">Save chats across devices, sync your preferences, and stop almost-sending regrettable messages.</p>
+      <div class="modal-banner" id="modal-banner" hidden></div>
+
+      <a class="provider-btn google" href="/api/auth/google">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47c-.28 1.48-1.13 2.73-2.4 3.58v2.96h3.86c2.26-2.08 3.56-5.14 3.56-8.78z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-2.97c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.28v3.07C3.26 21.3 7.31 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.27 14.32a7.21 7.21 0 0 1 0-4.63V6.62H1.28a12 12 0 0 0 0 10.76z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.28 6.62l3.99 3.07c.95-2.85 3.6-4.94 6.73-4.94z"/>
+        </svg>
+        Continue with Google
+      </a>
+
+      <a class="provider-btn github" href="/api/auth/login">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.4.5 0 5.9 0 12.5c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2 1-.3 2-.4 3-.4s2 .1 3 .4C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.7.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 24 12.5C24 5.9 18.6.5 12 .5z"/></svg>
+        Continue with GitHub
+      </a>
+
+      <div class="divider"><span>or with email</span></div>
+
+      <form id="dev-form" class="dev-form" novalidate>
+        <label class="field-label">Email</label>
+        <input id="dev-email" type="email" placeholder="you@company.com" autocomplete="email" required />
+        <label class="field-label">Display name <span class="muted">(optional)</span></label>
+        <input id="dev-name" type="text" placeholder="Satyam" autocomplete="name" />
+        <button class="btn-primary full" type="submit">Continue</button>
+        <p class="form-error" id="dev-err" hidden></p>
+      </form>
+
+      <p class="modal-foot"><span class="yellow">⚑</span> Email login is local-dev only. Production uses GitHub OAuth.</p>
+    </div>
+  </div>
 
   <footer class="foot">
     <div class="wrap foot-inner">
