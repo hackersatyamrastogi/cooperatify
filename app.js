@@ -1,4 +1,4 @@
-// corporatefilter.ai chat — multi-turn with local-only conversations.
+// corporatefilter.ai chat - multi-turn with local-only conversations.
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -21,7 +21,7 @@ try {
 const TONE_HINTS = {
   gentle: 'Soft and empathetic, avoids anything blunt.',
   balanced: 'Professional and natural, the sweet spot.',
-  spicy: "Bold and direct — doesn't sugarcoat.",
+  spicy: "Bold and direct, doesn't sugarcoat.",
 };
 
 let convs = load();
@@ -111,7 +111,7 @@ function renderChat() {
   const del = $('#delete-chat');
 
   if (!c) {
-    // No active conversation — show empty state, hide delete.
+    // No active conversation - show empty state, hide delete.
     msgs.innerHTML = '';
     msgs.appendChild(empty);
     empty.hidden = false;
@@ -176,7 +176,6 @@ function setMode(mode) {
   $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === mode));
   $('#input').placeholder = mode === 'translate' ? 'What you really want to say...' : 'Paste a message or drop a screenshot...';
   $('#drop-label').hidden = mode !== 'reply';
-  $('#send-label').textContent = 'Send';
 }
 
 // --- Event wiring ---
@@ -471,10 +470,10 @@ async function stream(c, pending, screenshot) {
   if (!err) return;
   const msgs = {
     github_not_configured: 'GitHub sign-in isn\'t configured yet. Use email sign-in below, or set GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET in .env.local.',
-    github_state_invalid: 'Sign-in state mismatch — please try again.',
+    github_state_invalid: 'Sign-in state mismatch, please try again.',
     github_exchange_failed: 'GitHub rejected the sign-in. Check the OAuth app callback URL matches /api/auth/callback.',
     google_not_configured: 'Google sign-in isn\'t configured yet. Set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET in .env.local.',
-    google_state_invalid: 'Google sign-in state mismatch — please try again.',
+    google_state_invalid: 'Google sign-in state mismatch, please try again.',
     google_exchange_failed: 'Google rejected the sign-in. Check the OAuth client redirect URI matches /api/auth/google-callback.',
     google_id_token_invalid: 'Couldn\'t decode Google ID token.',
     google_audience_mismatch: 'Google ID token audience mismatch.',

@@ -26,15 +26,28 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-// Lazy-import Vercel-style handlers from /api/*.js and shim req/res.
+// Lazy-import Vercel-style handlers from /api/*.js and catch-all [...path].js
 const handlerCache = new Map();
 async function loadHandler(name) {
   if (handlerCache.has(name)) return handlerCache.get(name);
+  // Try exact file first (e.g. api/translate.js)
   try {
     const mod = await import(`./api/${name}.js`);
     handlerCache.set(name, mod.default);
     return mod.default;
-  } catch { return null; }
+  } catch {}
+  // Try catch-all [...path].js in the parent directory (e.g. api/auth/[...path].js for api/auth/me)
+  const parts = name.split('/');
+  if (parts.length >= 2) {
+    const dir = parts.slice(0, -1).join('/');
+    const catchAllKey = `${dir}/[...path]`;
+    try {
+      const mod = await import(`./api/${catchAllKey}.js`);
+      handlerCache.set(name, mod.default);
+      return mod.default;
+    } catch {}
+  }
+  return null;
 }
 async function callApi(name, req, res, body) {
   const h = await loadHandler(name);

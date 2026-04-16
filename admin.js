@@ -13,9 +13,9 @@ const COLORS = { signups: '#ffcc00', chats: '#00d4d4', logins: '#8affcf', dau: '
 
 function fmtNum(n) { return (n || 0).toLocaleString(); }
 function fmtUSD(n) { return '$' + (n || 0).toFixed(2); }
-function fmtDate(ts) { if (!ts) return '—'; return new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); }
+function fmtDate(ts) { if (!ts) return '-'; return new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); }
 function fmtRel(ts) {
-  if (!ts) return '—';
+  if (!ts) return '-';
   const s = (Date.now() - ts) / 1000;
   if (s < 60) return `${Math.floor(s)}s ago`;
   if (s < 3600) return `${Math.floor(s/60)}m ago`;
@@ -24,7 +24,7 @@ function fmtRel(ts) {
 }
 function escape(s) { return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
 function delta(cur, prev) {
-  if (!prev && !cur) return '–';
+  if (!prev && !cur) return '-';
   if (!prev) return `+${fmtNum(cur)} new`;
   const diff = cur - prev;
   const pct = (diff / prev) * 100;
@@ -115,7 +115,7 @@ function render(d) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><img class="ava" src="${u.avatar || ''}" alt="" onerror="this.style.visibility='hidden'"/></td>
-      <td>${escape(u.name || '—')}</td>
+      <td>${escape(u.name || '-')}</td>
       <td><code class="mono-email">${escape(u.email)}</code></td>
       <td><span class="pill pill-${u.provider}">${u.provider}</span></td>
       <td>${u.signInCount}</td>
@@ -130,7 +130,7 @@ function render(d) {
     tr.innerHTML = `
       <td>${i+1}</td>
       <td><img class="ava sm" src="${u.avatar || ''}" alt="" onerror="this.style.visibility='hidden'"/></td>
-      <td>${escape(u.name || '—')}</td>
+      <td>${escape(u.name || '-')}</td>
       <td><code class="mono-email">${escape(u.email)}</code></td>
       <td><strong>${u.count}</strong></td>`;
     top.appendChild(tr);
@@ -251,7 +251,7 @@ function drawHeatmap(h) {
     row.innerHTML = `<span class="hm-day">${DAYS[r]}</span>` +
       h.grid[r].map((v, c) => {
         const op = v === 0 ? 0.08 : 0.2 + 0.8 * (v / max);
-        return `<span class="hm-cell" title="${DAYS[r]} ${c}:00 UTC — ${v} events" style="background: color-mix(in srgb, var(--yellow) ${(op * 100).toFixed(0)}%, var(--bg-subtle))"></span>`;
+        return `<span class="hm-cell" title="${DAYS[r]} ${c}:00 UTC - ${v} events" style="background: color-mix(in srgb, var(--yellow) ${(op * 100).toFixed(0)}%, var(--bg-subtle))"></span>`;
       }).join('');
     host.appendChild(row);
   }
@@ -270,7 +270,7 @@ function drawFunnel(stages) {
       <span class="fn-label">${s.label}</span>
       <span class="fn-bar"><span class="fn-fill" style="width:${pct.toFixed(1)}%; background:${colors[i]}"></span></span>
       <span class="fn-count">${s.count}</span>
-      <span class="fn-conv">${convPct !== null ? convPct.toFixed(0) + '%' : '—'}</span>`;
+      <span class="fn-conv">${convPct !== null ? convPct.toFixed(0) + '%' : '-'}</span>`;
     host.appendChild(el);
   });
 }
@@ -285,7 +285,7 @@ function renderFeed(events) {
     li.innerHTML = `
       <span class="feed-time" title="${fmtDate(e.ts)}">${fmtRel(e.ts)}</span>
       <span class="feed-type">${e.type}</span>
-      <span class="feed-email">${escape(e.email || '—')}</span>
+      <span class="feed-email">${escape(e.email || '-')}</span>
       <span class="feed-meta">${escape(meta)}</span>`;
     ul.appendChild(li);
   }
