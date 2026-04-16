@@ -613,7 +613,14 @@ if ('serviceWorker' in navigator) {
 }
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isPWAParam = new URLSearchParams(location.search).has('pwa');
-const isPWA = isStandalone || isPWAParam;
+const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// Auto-redirect mobile browsers to PWA view
+if (isMobileDevice && !isPWAParam && !isStandalone && location.pathname === '/') {
+  location.replace(location.origin + '/?pwa=1');
+}
+
+const isPWA = isStandalone || isPWAParam || isMobileDevice;
 if (isPWA) {
   document.documentElement.classList.add('pwa');
   if (!active()) newConv();
