@@ -3,12 +3,14 @@ import commandsHandler from './_commands.js';
 import eventsHandler from './_events.js';
 import interactionsHandler from './_interactions.js';
 import manifestHandler from './_manifest.js';
+import oauthHandler from './_oauth.js';
 
 const routes = {
   commands: commandsHandler,
   events: eventsHandler,
   interactions: interactionsHandler,
   manifest: manifestHandler,
+  oauth: oauthHandler,
 };
 
 export default function handler(req, res) {
