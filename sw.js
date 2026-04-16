@@ -1,4 +1,4 @@
-const CACHE = 'cf-v1';
+const CACHE = 'cf-v2';
 const STATIC = ['/', '/styles.css', '/app.js'];
 
 self.addEventListener('install', (e) => {

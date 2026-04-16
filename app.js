@@ -25,6 +25,12 @@ const TONE_HINTS = {
 };
 
 let convs = load();
+// Clean up stale "thinking" messages left from interrupted sessions
+for (const c of convs) {
+  const had = c.messages.length;
+  c.messages = c.messages.filter((m) => !m.thinking);
+  if (c.messages.length !== had) save();
+}
 let activeId = localStorage.getItem(ACTIVE_KEY) || null;
 let pendingScreenshot = null; // {dataUrl}
 
@@ -340,9 +346,12 @@ function ensureConv() {
   return active();
 }
 
+let sending = false;
 async function send() {
+  if (sending) return;
   const text = input.value.trim();
   if (!text && !pendingScreenshot) return;
+  sending = true;
 
   const c = ensureConv();
   const userMsg = { role: 'user', content: text || '(see attached screenshot)', ts: now() };
@@ -360,6 +369,7 @@ async function send() {
   c.updated = now(); save(); renderChat(); renderSidebar();
 
   await stream(c, pending, screenshotToSend);
+  sending = false;
 }
 
 async function regenerate(assistantMsg) {
@@ -374,23 +384,23 @@ async function regenerate(assistantMsg) {
 }
 
 async function stream(c, pending, screenshot) {
-  const payload = {
-    mode: c.mode, format: c.format, tone: c.tone,
-    messages: c.messages.filter((m) => m !== pending).map((m) => ({ role: m.role, content: m.content })),
-    screenshot,
-  };
+  const msgs = c.messages
+    .filter((m) => m !== pending && !m.thinking)
+    .map((m) => ({ role: m.role, content: m.content }));
+  const body = { mode: c.mode, format: c.format, tone: c.tone, messages: msgs };
+  if (screenshot) body.screenshot = screenshot;
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Request failed');
     pending.content = data.output || '(empty)';
     pending.thinking = false;
   } catch (err) {
-    pending.content = `⚠️ ${err.message}`;
+    pending.content = `Error: ${err.message}`;
     pending.thinking = false;
   }
   c.updated = now(); save(); renderChat(); renderSidebar();
