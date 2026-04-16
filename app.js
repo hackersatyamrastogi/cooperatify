@@ -546,11 +546,87 @@ $('#yr').textContent = new Date().getFullYear();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
-const isPWA = window.matchMedia('(display-mode: standalone)').matches
-  || navigator.standalone === true
-  || new URLSearchParams(location.search).has('pwa');
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isPWAParam = new URLSearchParams(location.search).has('pwa');
+const isPWA = isStandalone || isPWAParam;
 if (isPWA) {
   document.documentElement.classList.add('pwa');
-  // In PWA mode, auto-open or create a new chat if none active
   if (!active()) newConv();
 }
+
+// PWA install prompt (platform-aware)
+(function setupInstallBanner() {
+  if (isStandalone) return; // already installed
+  if (localStorage.getItem('corporatefilter:install-dismissed')) return;
+
+  const banner = $('#install-banner');
+  const hint = $('#ib-hint');
+  const installBtn = $('#ib-install');
+  const closeBtn = $('#ib-close');
+  if (!banner) return;
+
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/CriOS|Chrome/.test(ua);
+  const isChrome = /Chrome/.test(ua) && !/Edg/.test(ua);
+
+  let deferredPrompt = null;
+
+  if (isIOS && isSafari) {
+    // iOS Safari: no native prompt, show manual instructions
+    hint.innerHTML = 'Tap <span class="key">&#x2BEA;&#xFE0E;</span> Share, then <strong>Add to Home Screen</strong>';
+    installBtn.textContent = 'Got it';
+    installBtn.addEventListener('click', () => {
+      banner.hidden = true;
+      localStorage.setItem('corporatefilter:install-dismissed', '1');
+    });
+  } else if (isChrome || isAndroid) {
+    // Chrome/Android: capture beforeinstallprompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.hidden = false;
+    });
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === 'accepted') banner.hidden = true;
+      } else {
+        hint.textContent = 'Open browser menu, then "Install app" or "Add to Home Screen"';
+        installBtn.textContent = 'Got it';
+        installBtn.addEventListener('click', () => { banner.hidden = true; }, { once: true });
+      }
+    });
+  } else {
+    // Desktop or other: generic instructions
+    hint.textContent = 'Open browser menu and select "Install app" for the best experience';
+    installBtn.textContent = 'Got it';
+    installBtn.addEventListener('click', () => {
+      banner.hidden = true;
+      localStorage.setItem('corporatefilter:install-dismissed', '1');
+    });
+  }
+
+  closeBtn.addEventListener('click', () => {
+    banner.hidden = true;
+    localStorage.setItem('corporatefilter:install-dismissed', '1');
+  });
+
+  // Show banner: immediately on iOS (no native prompt), or after 3s on mobile
+  if (isIOS && isSafari) {
+    setTimeout(() => { banner.hidden = false; }, 1500);
+  } else if (isAndroid || isPWAParam) {
+    setTimeout(() => { if (!deferredPrompt) banner.hidden = false; }, 2000);
+  } else if (isPWAParam) {
+    setTimeout(() => { banner.hidden = false; }, 1000);
+  }
+
+  // Also listen for appinstalled
+  window.addEventListener('appinstalled', () => {
+    banner.hidden = true;
+    localStorage.setItem('corporatefilter:install-dismissed', '1');
+  });
+})();
