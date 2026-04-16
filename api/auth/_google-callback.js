@@ -27,9 +27,10 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  const proto = req.headers['x-forwarded-proto'] || 'http';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  const redirectUri = `${proto}://${host}/api/auth/google-callback`;
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.');
+  const baseUrl = isLocal ? ('http://' + host) : (process.env.AUTH_BASE_URL || 'https://www.corporatefilter.ai');
+  const redirectUri = baseUrl + '/api/auth/google-callback';
 
   const body = new URLSearchParams({
     code, client_id: clientId, client_secret: clientSecret,

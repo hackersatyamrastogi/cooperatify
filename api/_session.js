@@ -55,7 +55,7 @@ export function setCookie(res, value, { maxAge = MAX_AGE, path = '/' } = {}) {
     'HttpOnly',
     'SameSite=Lax',
   ];
-  if (process.env.NODE_ENV !== 'development' && !process.env.COOP_INSECURE_COOKIES) attrs.push('Secure');
+  if (!process.env.COOP_INSECURE_COOKIES) attrs.push('Secure');
   res.setHeader('Set-Cookie', attrs.join('; '));
 }
 

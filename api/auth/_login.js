@@ -17,9 +17,10 @@ export default function handler(req, res) {
     `coop_oauth_state=${state}; Path=/; Max-Age=600; HttpOnly; SameSite=Lax${process.env.NODE_ENV !== 'development' && !process.env.COOP_INSECURE_COOKIES ? '; Secure' : ''}`,
   ]);
 
-  const proto = req.headers['x-forwarded-proto'] || 'http';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  const redirectUri = `${proto}://${host}/api/auth/callback`;
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.');
+  const baseUrl = isLocal ? ('http://' + host) : (process.env.AUTH_BASE_URL || 'https://www.corporatefilter.ai');
+  const redirectUri = baseUrl + '/api/auth/callback';
 
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', clientId);

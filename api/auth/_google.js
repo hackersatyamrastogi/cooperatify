@@ -13,9 +13,10 @@ export default function handler(req, res) {
   const secureFlag = process.env.NODE_ENV !== 'development' && !process.env.COOP_INSECURE_COOKIES ? '; Secure' : '';
   res.setHeader('Set-Cookie', [`coop_goog_state=${state}; Path=/; Max-Age=600; HttpOnly; SameSite=Lax${secureFlag}`]);
 
-  const proto = req.headers['x-forwarded-proto'] || 'http';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  const redirectUri = `${proto}://${host}/api/auth/google-callback`;
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const isLocal = host.startsWith('localhost') || host.startsWith('127.');
+  const baseUrl = isLocal ? ('http://' + host) : (process.env.AUTH_BASE_URL || 'https://www.corporatefilter.ai');
+  const redirectUri = baseUrl + '/api/auth/google-callback';
 
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   url.searchParams.set('client_id', clientId);

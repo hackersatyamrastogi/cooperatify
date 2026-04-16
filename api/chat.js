@@ -41,8 +41,14 @@ function systemPrompt(mode, format, tone) {
   ].join('\n');
 }
 
-function cors(res) {
-  res.setHeader('access-control-allow-origin', '*');
+const ALLOWED_ORIGINS = [
+  'https://www.corporatefilter.ai', 'https://corporatefilter.ai',
+  'https://cooperatify.vercel.app', 'http://localhost:3000',
+];
+function cors(req, res) {
+  const origin = req.headers?.origin || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) || origin.startsWith('chrome-extension://');
+  res.setHeader('access-control-allow-origin', allowed ? origin : ALLOWED_ORIGINS[0]);
   res.setHeader('access-control-allow-methods', 'POST, OPTIONS');
   res.setHeader('access-control-allow-headers', 'content-type');
 }
@@ -64,7 +70,7 @@ function buildMessages(messages, screenshot) {
 }
 
 export default async function handler(req, res) {
-  cors(res);
+  cors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });

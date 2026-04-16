@@ -58,7 +58,7 @@ async function load() {
   }
 }
 
-function showError(msg) { const el = $('#error'); el.innerHTML = msg; el.hidden = false; }
+function showError(msg) { const el = $('#error'); el.textContent = msg; el.hidden = false; }
 
 function pulse() {
   const p = $('#pulse'); if (!p || !state.auto) return;
