@@ -484,6 +484,9 @@ async function stream(c, pending, screenshot) {
 // --- Auth ---
 async function openSigninModal() {
   const m = $('#signin-modal'); if (!m) return;
+  // Hide install banner when sign-in modal opens
+  var ib = document.getElementById('install-banner');
+  if (ib) ib.hidden = true;
   m.hidden = false;
 
   // Surface any pending auth error as a banner inside the modal
@@ -677,13 +680,14 @@ if (isPWA) {
     localStorage.setItem('corporatefilter:install-dismissed', '1');
   });
 
-  // Show banner: immediately on iOS (no native prompt), or after 3s on mobile
-  if (isIOS && isSafari) {
-    setTimeout(() => { banner.hidden = false; }, 1500);
-  } else if (isAndroid || isPWAParam) {
-    setTimeout(() => { if (!deferredPrompt) banner.hidden = false; }, 2000);
+  // Show banner only on mobile devices, not desktop
+  var isMobile = isIOS || isAndroid || (window.innerWidth < 768);
+  if (isIOS && isSafari && isMobile) {
+    setTimeout(function() { if (!document.querySelector('#signin-modal:not([hidden])')) banner.hidden = false; }, 2500);
+  } else if (isAndroid && isMobile) {
+    setTimeout(function() { if (!deferredPrompt && !document.querySelector('#signin-modal:not([hidden])')) banner.hidden = false; }, 3000);
   } else if (isPWAParam) {
-    setTimeout(() => { banner.hidden = false; }, 1000);
+    setTimeout(function() { banner.hidden = false; }, 1500);
   }
 
   // Also listen for appinstalled
