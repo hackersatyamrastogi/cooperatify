@@ -633,7 +633,6 @@ h2 { font-family: var(--grotesk); font-size: clamp(28px, 3.5vw, 40px); letter-sp
 
 /* Install banner gets extra bottom space in PWA view */
 .pwa .install-banner { z-index: 100; }
-.pwa .thumb, .pwa .thumb-x { display: none !important; }
 
 /* Standalone mode (fully installed, no browser chrome) */
 @media (display-mode: standalone) {

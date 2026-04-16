@@ -362,6 +362,16 @@ function readImage(file) {
 }
 $('#thumb-x').addEventListener('click', () => { pendingScreenshot = null; $('#thumb').hidden = true; });
 
+// Attach button (file picker for images)
+var attachInput = document.getElementById('attach-input');
+if (attachInput) {
+  attachInput.addEventListener('change', function() {
+    var file = attachInput.files && attachInput.files[0];
+    if (file && file.type.startsWith('image/')) readImage(file);
+    attachInput.value = '';
+  });
+}
+
 // Voice input
 const mic = $('#mic');
 let rec = null;
