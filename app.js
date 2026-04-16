@@ -398,11 +398,36 @@ function ensureConv() {
   return active();
 }
 
+var DAILY_LIMIT = 10;
+function getChatCount() {
+  try {
+    var data = JSON.parse(localStorage.getItem('corporatefilter:dailyChats') || '{}');
+    var today = new Date().toISOString().slice(0, 10);
+    if (data.date !== today) return 0;
+    return data.count || 0;
+  } catch { return 0; }
+}
+function incrementChatCount() {
+  var today = new Date().toISOString().slice(0, 10);
+  var data = { date: today, count: getChatCount() + 1 };
+  localStorage.setItem('corporatefilter:dailyChats', JSON.stringify(data));
+}
+function isLoggedIn() {
+  return document.cookie.includes('coop_sess=');
+}
+
 let sending = false;
 async function send() {
   if (sending) return;
   const text = input.value.trim();
   if (!text && !pendingScreenshot) return;
+
+  // Check daily limit for unauthenticated users
+  if (!isLoggedIn() && getChatCount() >= DAILY_LIMIT) {
+    showLimitModal();
+    return;
+  }
+
   sending = true;
 
   try {
@@ -421,9 +446,35 @@ async function send() {
     c.updated = now(); save(); renderChat(); renderSidebar();
 
     await stream(c, pending, screenshotToSend);
+    if (!isLoggedIn()) incrementChatCount();
   } finally {
     sending = false;
   }
+}
+
+function showLimitModal() {
+  var existing = document.getElementById('cf-limit-modal');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'cf-limit-modal';
+  modal.className = 'modal';
+  modal.innerHTML =
+    '<div class="modal-backdrop" data-limit-close></div>' +
+    '<div class="modal-card modal-sm" style="text-align:center;padding:28px 24px">' +
+      '<div style="font-size:36px;margin-bottom:12px">🔒</div>' +
+      '<h2 class="modal-title" style="margin-bottom:8px">Daily limit reached</h2>' +
+      '<p class="modal-sub" style="margin-bottom:20px">You have used all ' + DAILY_LIMIT + ' free chats for today. Sign in for unlimited access.</p>' +
+      '<button class="btn-primary full" id="limit-signin" type="button" style="margin-bottom:10px">Sign in to continue</button>' +
+      '<button class="btn-ghost full" data-limit-close type="button">Try again tomorrow</button>' +
+    '</div>';
+  document.body.appendChild(modal);
+  modal.querySelector('#limit-signin').onclick = function() {
+    modal.remove();
+    openSigninModal();
+  };
+  modal.addEventListener('click', function(e) {
+    if (e.target.hasAttribute('data-limit-close')) modal.remove();
+  });
 }
 
 async function regenerate(assistantMsg) {
