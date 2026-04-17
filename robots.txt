@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /.data/
+
+Sitemap: https://www.corporatefilter.ai/sitemap.xml
